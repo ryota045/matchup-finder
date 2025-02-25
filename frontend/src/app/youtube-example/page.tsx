@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import YouTubePlayer from '../../components/YouTubePlayer';
 import YouTubePlayerWithTimestamps from '../../components/YouTubePlayerWithTimestamps';
 import { TimestampItem } from '../../components/YouTubeTimestamp';
-import CharacterIcons from '@/components/CharacterIcons';
+import CharacterIcons from '../../components/CharacterIcons';
 // import CharacterIcons from '../../components/CharacterIcons';
 export default function YouTubeExamplePage() {
   const [youtubeUrl, setYoutubeUrl] = useState('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
