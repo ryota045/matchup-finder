@@ -2,10 +2,23 @@
 
 import React, { useState } from 'react';
 import YouTubePlayer from '../../components/YouTubePlayer';
-
+import YouTubePlayerWithTimestamps from '../../components/YouTubePlayerWithTimestamps';
+import { TimestampItem } from '../../components/YouTubeTimestamp';
+import CharacterIcons from '@/components/CharacterIcons';
+// import CharacterIcons from '../../components/CharacterIcons';
 export default function YouTubeExamplePage() {
   const [youtubeUrl, setYoutubeUrl] = useState('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   const [inputUrl, setInputUrl] = useState('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+
+  // サンプルのタイムスタンプ
+  const sampleTimestamps: TimestampItem[] = [
+    { time: 0, label: 'イントロ' },
+    { time: 18, label: 'サビ開始' },
+    { time: 43, label: '2番開始' },
+    { time: 62, label: '2番サビ' },
+    { time: 131, label: 'ダンスシーン' },
+    { time: 213, label: 'エンディング' }
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -15,6 +28,8 @@ export default function YouTubeExamplePage() {
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">YouTubeプレーヤーの例</h1>
+
+      <CharacterIcons />
       
       <div className="mb-6">
         <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-2">
@@ -55,10 +70,24 @@ export default function YouTubeExamplePage() {
         <YouTubePlayer url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30" />
       </div>
       
+      <div className="mb-10">
+        <h2 className="text-xl font-semibold mb-2">タイムスタンプ付きプレーヤー（アニメーション付きアコーディオン）</h2>
+        <p className="mb-2 text-gray-600">
+          右側のタイムスタンプをクリックすると、その時間から自動的に再生が始まります。
+          「タイムスタンプ」のヘッダー部分をクリックすると、スムーズなアニメーションでアコーディオンが開閉します。
+        </p>
+        <YouTubePlayerWithTimestamps 
+          url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" 
+          timestamps={sampleTimestamps}
+        />
+      </div>
+      
       <div className="mt-8 p-4 bg-gray-100 rounded">
         <h2 className="text-xl font-semibold mb-2">使用方法</h2>
         <pre className="bg-gray-800 text-white p-4 rounded overflow-x-auto">
           {`import YouTubePlayer from '../components/YouTubePlayer';
+import YouTubePlayerWithTimestamps from '../components/YouTubePlayerWithTimestamps';
+import { TimestampItem } from '../components/YouTubeTimestamp';
 
 // 基本的な使用法
 <YouTubePlayer url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" />
@@ -84,7 +113,21 @@ export default function YouTubeExamplePage() {
 // 時間指定の形式は様々なものに対応
 // 秒指定: t=30
 // 分秒指定: t=1m30s
-// 時分秒指定: t=1h2m30s`}
+// 時分秒指定: t=1h2m30s
+
+// タイムスタンプ付きプレーヤーの使用例
+// - タイムスタンプクリック時に自動再生
+// - アニメーション付きアコーディオンで開閉可能
+const timestamps: TimestampItem[] = [
+  { time: 0, label: 'イントロ' },
+  { time: 18, label: 'サビ開始' },
+  { time: 43, label: '2番開始' }
+];
+
+<YouTubePlayerWithTimestamps 
+  url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" 
+  timestamps={timestamps}
+/>`}
         </pre>
       </div>
     </div>
