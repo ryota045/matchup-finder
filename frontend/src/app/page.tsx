@@ -52,9 +52,15 @@ export default function Home() {
         <div className="text-center">
           <a 
             href="/youtube-example" 
-            className="inline-block px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="inline-block px-6 py-3 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors mr-4"
           >
             YouTubeプレーヤーの例を見る
+          </a>
+          <a 
+            href="/matchup" 
+            className="inline-block px-6 py-3 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors"
+          >
+            マッチアップファインダーを見る
           </a>
         </div>
       </div>

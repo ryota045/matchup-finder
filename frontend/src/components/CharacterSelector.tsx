@@ -134,7 +134,7 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
         {/* 単一キャラクター選択欄 */}
         <div className="bg-white rounded-lg shadow-md p-4">
-          <h2 className="text-xl font-bold mb-4">単一キャラクター選択</h2>
+          <h2 className="text-xl font-bold mb-4">使用キャラクター選択</h2>
           <div 
             className="min-h-16 p-4 bg-gray-50 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
             onClick={openModalForSingle}
@@ -186,7 +186,7 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
 
         {/* 複数キャラクター選択欄 */}
         <div className="bg-white rounded-lg shadow-md p-4">
-          <h2 className="text-xl font-bold mb-4">複数キャラクター選択</h2>
+          <h2 className="text-xl font-bold mb-4">対戦キャラクター選択</h2>
           <div 
             className="min-h-16 p-4 bg-gray-50 rounded-md cursor-pointer hover:bg-gray-100 transition-colors"
             onClick={openModalForMultiple}
@@ -258,7 +258,7 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
             <div className="p-4 border-b sticky top-0 bg-white z-10">
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-bold">
-                  {selectionMode === 'single' ? '単一キャラクター選択' : '複数キャラクター選択'}
+                  {selectionMode === 'single' ? '使用キャラクター選択' : '対戦キャラクター選択'}
                 </h2>
                 <div className="flex items-center space-x-2">
                   {selectionMode === 'multiple' && multipleCharacters.length > 0 && (
