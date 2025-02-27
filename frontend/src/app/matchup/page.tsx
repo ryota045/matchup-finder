@@ -86,17 +86,21 @@ export default function MatchupPage() {
             // 使用キャラクターのチェック
             if (hasUserCharacter) {
               const chara1 = value.chara1 || '';
-              userCharacterMatched = chara1.toLowerCase().includes(selectedCharacter.toLowerCase());
-              console.log(`使用キャラクターチェック: ${selectedCharacter} in ${chara1} = ${userCharacterMatched}`);
+              const chara2 = value.chara2 || '';
+              userCharacterMatched = chara1.toLowerCase().includes(selectedCharacter.toLowerCase()) || 
+                                    chara2.toLowerCase().includes(selectedCharacter.toLowerCase());
+              console.log(`使用キャラクターチェック: ${selectedCharacter} in ${chara1} or ${chara2} = ${userCharacterMatched}`);
             }
             
             // 対戦キャラクターのチェック
             if (hasOpponentCharacters) {
+              const chara1 = value.chara1 || '';
               const chara2 = value.chara2 || '';
               opponentCharactersMatched = selectedCharacters.every(char => 
+                chara1.toLowerCase().includes(char.toLowerCase()) || 
                 chara2.toLowerCase().includes(char.toLowerCase())
               );
-              console.log(`対戦キャラクターチェック: ${selectedCharacters.join(', ')} in ${chara2} = ${opponentCharactersMatched}`);
+              console.log(`対戦キャラクターチェック: ${selectedCharacters.join(', ')} in ${chara1} or ${chara2} = ${opponentCharactersMatched}`);
             }
             
             // 両方の条件を満たす場合のみ追加
@@ -145,17 +149,21 @@ export default function MatchupPage() {
               // 使用キャラクターのチェック
               if (hasUserCharacter) {
                 const chara1 = value.chara1 || '';
-                userCharacterMatched = chara1.toLowerCase().includes(selectedCharacter.toLowerCase());
-                console.log(`使用キャラクターチェック: ${selectedCharacter} in ${chara1} = ${userCharacterMatched}`);
+                const chara2 = value.chara2 || '';
+                userCharacterMatched = chara1.toLowerCase().includes(selectedCharacter.toLowerCase()) || 
+                                      chara2.toLowerCase().includes(selectedCharacter.toLowerCase());
+                console.log(`使用キャラクターチェック: ${selectedCharacter} in ${chara1} or ${chara2} = ${userCharacterMatched}`);
               }
               
               // 対戦キャラクターのチェック
               if (hasOpponentCharacters) {
+                const chara1 = value.chara1 || '';
                 const chara2 = value.chara2 || '';
                 opponentCharactersMatched = selectedCharacters.every(char => 
+                  chara1.toLowerCase().includes(char.toLowerCase()) || 
                   chara2.toLowerCase().includes(char.toLowerCase())
                 );
-                console.log(`対戦キャラクターチェック: ${selectedCharacters.join(', ')} in ${chara2} = ${opponentCharactersMatched}`);
+                console.log(`対戦キャラクターチェック: ${selectedCharacters.join(', ')} in ${chara1} or ${chara2} = ${opponentCharactersMatched}`);
               }
               
               // 両方の条件を満たす場合のみ追加
