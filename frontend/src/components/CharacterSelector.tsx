@@ -6,7 +6,8 @@ import {
   CharacterIcon, 
   normalizeJapanese, 
   getJapaneseName, 
-  filterCharacterIcons 
+  filterCharacterIcons,
+  characterIcons
 } from '../data/characterData';
 
 interface CharacterSelectorProps {
@@ -56,7 +57,15 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
     setSingleCharacter(characterName);
     if (onSingleCharacterSelect) {
       setTimeout(() => {
-        onSingleCharacterSelect(characterName);
+        // キャラクターのanotationフィールドの値をすべて使用
+        const character = characterIcons.find(c => c.eng === characterName);
+        if (character && character.anotation.length > 0) {
+          // anotationフィールドの値をすべて渡す（カンマ区切り）
+          const anotationValues = character.anotation.join(',');
+          onSingleCharacterSelect(anotationValues);
+        } else {
+          onSingleCharacterSelect(characterName);
+        }
       }, 0);
     }
     setIsModalOpen(false);
@@ -70,7 +79,16 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
         if (onMultipleCharactersSelect) {
           // レンダリング後に実行するようにする
           setTimeout(() => {
-            onMultipleCharactersSelect(newSelection);
+            // 選択されたキャラクターのanotationフィールドの値をすべて使用
+            const anotationValues = newSelection.map(char => {
+              const character = characterIcons.find(c => c.eng === char);
+              if (character && character.anotation.length > 0) {
+                // anotationフィールドの値をすべて渡す（カンマ区切り）
+                return character.anotation.join(',');
+              }
+              return char;
+            });
+            onMultipleCharactersSelect(anotationValues);
           }, 0);
         }
         return newSelection;
@@ -79,7 +97,16 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
         if (onMultipleCharactersSelect) {
           // レンダリング後に実行するようにする
           setTimeout(() => {
-            onMultipleCharactersSelect(newSelection);
+            // 選択されたキャラクターのanotationフィールドの値をすべて使用
+            const anotationValues = newSelection.map(char => {
+              const character = characterIcons.find(c => c.eng === char);
+              if (character && character.anotation.length > 0) {
+                // anotationフィールドの値をすべて渡す（カンマ区切り）
+                return character.anotation.join(',');
+              }
+              return char;
+            });
+            onMultipleCharactersSelect(anotationValues);
           }, 0);
         }
         return newSelection;

@@ -4,6 +4,7 @@ import React, { useEffect, useState } from 'react';
 import CharacterSelector from '../../components/CharacterSelector';
 import YouTubePlayerWithTimestamps from '../../components/YouTubePlayerWithTimestamps';
 import { TimestampItem } from '../../components/YouTubeTimestamp';
+import { characterIcons } from '../../data/characterData';
 
 interface MatchupItem {
   directory: string;
@@ -56,6 +57,8 @@ export default function MatchupPage() {
   useEffect(() => {
     if (matchupLists.length === 0) return;
 
+    // 注意: selectedCharacterとselectedCharactersはすでにanotation値になっています
+    // CharacterSelectorコンポーネントで変換されています
     console.log('キャラクター選択変更:', { 使用キャラクター: selectedCharacter, 対戦キャラクター: selectedCharacters });
     
     const videos: MatchupVideo[] = [];
@@ -87,20 +90,39 @@ export default function MatchupPage() {
             if (hasUserCharacter) {
               const chara1 = value.chara1 || '';
               const chara2 = value.chara2 || '';
-              userCharacterMatched = chara1.toLowerCase().includes(selectedCharacter.toLowerCase()) || 
-                                    chara2.toLowerCase().includes(selectedCharacter.toLowerCase());
-              console.log(`使用キャラクターチェック: ${selectedCharacter} in ${chara1} or ${chara2} = ${userCharacterMatched}`);
+              
+              // カンマ区切りのanotation値を配列に分割
+              const anotations = selectedCharacter.split(',');
+              
+              // いずれかのanotation値がchara1またはchara2に含まれているかチェック
+              userCharacterMatched = anotations.some(anotation => {
+                // 単語境界でのマッチをチェック
+                const regex = new RegExp(`\\b${anotation.toLowerCase()}\\b`);
+                return regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase());
+              });
+              
+              console.log(`使用キャラクターチェック: [${anotations.join(', ')}] in ${chara1} or ${chara2} = ${userCharacterMatched}`);
             }
             
             // 対戦キャラクターのチェック
             if (hasOpponentCharacters) {
               const chara1 = value.chara1 || '';
               const chara2 = value.chara2 || '';
-              opponentCharactersMatched = selectedCharacters.every(char => 
-                chara1.toLowerCase().includes(char.toLowerCase()) || 
-                chara2.toLowerCase().includes(char.toLowerCase())
-              );
-              console.log(`対戦キャラクターチェック: ${selectedCharacters.join(', ')} in ${chara1} or ${chara2} = ${opponentCharactersMatched}`);
+              
+              // 各対戦キャラクターについて、いずれかのanotation値がchara1またはchara2に含まれているかチェック
+              // OR条件: 選択したキャラクターのいずれか1つでも一致すればtrue
+              opponentCharactersMatched = selectedCharacters.some(char => {
+                // カンマ区切りのanotation値を配列に分割
+                const anotations = char.split(',');
+                
+                return anotations.some(anotation => {
+                  // 単語境界でのマッチをチェック
+                  const regex = new RegExp(`\\b${anotation.toLowerCase()}\\b`);
+                  return regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase());
+                });
+              });
+              
+              console.log(`対戦キャラクターチェック(OR条件): ${selectedCharacters.join(', ')} in ${chara1} or ${chara2} = ${opponentCharactersMatched}`);
             }
             
             // 両方の条件を満たす場合のみ追加
@@ -150,20 +172,39 @@ export default function MatchupPage() {
               if (hasUserCharacter) {
                 const chara1 = value.chara1 || '';
                 const chara2 = value.chara2 || '';
-                userCharacterMatched = chara1.toLowerCase().includes(selectedCharacter.toLowerCase()) || 
-                                      chara2.toLowerCase().includes(selectedCharacter.toLowerCase());
-                console.log(`使用キャラクターチェック: ${selectedCharacter} in ${chara1} or ${chara2} = ${userCharacterMatched}`);
+                
+                // カンマ区切りのanotation値を配列に分割
+                const anotations = selectedCharacter.split(',');
+                
+                // いずれかのanotation値がchara1またはchara2に含まれているかチェック
+                userCharacterMatched = anotations.some(anotation => {
+                  // 単語境界でのマッチをチェック
+                  const regex = new RegExp(`\\b${anotation.toLowerCase()}\\b`);
+                  return regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase());
+                });
+                
+                console.log(`使用キャラクターチェック: [${anotations.join(', ')}] in ${chara1} or ${chara2} = ${userCharacterMatched}`);
               }
               
               // 対戦キャラクターのチェック
               if (hasOpponentCharacters) {
                 const chara1 = value.chara1 || '';
                 const chara2 = value.chara2 || '';
-                opponentCharactersMatched = selectedCharacters.every(char => 
-                  chara1.toLowerCase().includes(char.toLowerCase()) || 
-                  chara2.toLowerCase().includes(char.toLowerCase())
-                );
-                console.log(`対戦キャラクターチェック: ${selectedCharacters.join(', ')} in ${chara1} or ${chara2} = ${opponentCharactersMatched}`);
+                
+                // 各対戦キャラクターについて、いずれかのanotation値がchara1またはchara2に含まれているかチェック
+                // OR条件: 選択したキャラクターのいずれか1つでも一致すればtrue
+                opponentCharactersMatched = selectedCharacters.some(char => {
+                  // カンマ区切りのanotation値を配列に分割
+                  const anotations = char.split(',');
+                  
+                  return anotations.some(anotation => {
+                    // 単語境界でのマッチをチェック
+                    const regex = new RegExp(`\\b${anotation.toLowerCase()}\\b`);
+                    return regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase());
+                  });
+                });
+                
+                console.log(`対戦キャラクターチェック(OR条件): ${selectedCharacters.join(', ')} in ${chara1} or ${chara2} = ${opponentCharactersMatched}`);
               }
               
               // 両方の条件を満たす場合のみ追加
@@ -252,7 +293,19 @@ export default function MatchupPage() {
               <div>
                 <h3 className="text-lg font-medium mb-2">使用キャラクター:</h3>
                 {selectedCharacter ? (
-                  <p className="p-2 bg-blue-100 rounded">{selectedCharacter}</p>
+                  <p className="p-2 bg-blue-100 rounded">
+                    {(() => {
+                      // カンマ区切りのanotation値を配列に分割
+                      const anotations = selectedCharacter.split(',');
+                      
+                      // 最初のanotation値に対応するキャラクターを検索
+                      const character = characterIcons.find(c => 
+                        c.anotation.some(a => anotations.includes(a.toLowerCase()))
+                      );
+                      
+                      return character ? character.jp : selectedCharacter;
+                    })()}
+                  </p>
                 ) : (
                   <p className="text-gray-500">キャラクターが選択されていません</p>
                 )}
@@ -262,9 +315,21 @@ export default function MatchupPage() {
                 <h3 className="text-lg font-medium mb-2">対戦キャラクター:</h3>
                 {selectedCharacters.length > 0 ? (
                   <div className="flex flex-wrap gap-2">
-                    {selectedCharacters.map(char => (
-                      <span key={char} className="px-2 py-1 bg-blue-100 rounded">{char}</span>
-                    ))}
+                    {selectedCharacters.map(char => {
+                      // カンマ区切りのanotation値を配列に分割
+                      const anotations = char.split(',');
+                      
+                      // いずれかのanotation値に対応するキャラクターを検索
+                      const character = characterIcons.find(c => 
+                        c.anotation.some(a => anotations.includes(a.toLowerCase()))
+                      );
+                      
+                      const displayName = character ? character.jp : char;
+                      
+                      return (
+                        <span key={char} className="px-2 py-1 bg-blue-100 rounded">{displayName}</span>
+                      );
+                    })}
                   </div>
                 ) : (
                   <p className="text-gray-500">キャラクターが選択されていません</p>
