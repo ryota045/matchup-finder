@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from "next/image";
-import CharacterSelector from "../components/CharacterSelector";
+import CharacterSelector from "../components/character/CharacterSelector";
 
 export default function Home() {
   const [selectedCharacter, setSelectedCharacter] = useState<string>('');

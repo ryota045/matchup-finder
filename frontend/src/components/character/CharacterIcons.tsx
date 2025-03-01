@@ -5,7 +5,7 @@ import {
   normalizeJapanese, 
   getSortedCharacterIcons, 
   filterCharacterIcons 
-} from '../data/characterData';
+} from '../../data/characterData';
 
 export interface CharacterIconProps {
   onIconClick?: (name: string) => void;

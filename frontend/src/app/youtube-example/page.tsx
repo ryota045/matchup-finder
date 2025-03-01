@@ -1,10 +1,10 @@
 'use client';
 
 import React, { useState } from 'react';
-import YouTubePlayer from '../../components/YouTubePlayer';
-import YouTubePlayerWithTimestamps from '../../components/YouTubePlayerWithTimestamps';
-import { TimestampItem } from '../../components/YouTubeTimestamp';
-import CharacterIcons from '../../components/CharacterIcons';
+import YouTubePlayer from '../../components/player/YouTubePlayer';
+import YouTubePlayerWithTimestamps from '../../components/player/YouTubePlayerWithTimestamps';
+import { TimestampItem } from '../../components/timestamp/TimestampItem';
+import CharacterIcons from '../../components/character/CharacterIcons';
 // import CharacterIcons from '../../components/CharacterIcons';
 export default function YouTubeExamplePage() {
   const [youtubeUrl, setYoutubeUrl] = useState('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
@@ -111,7 +111,7 @@ export default function YouTubeExamplePage() {
         <pre className="bg-gray-800 text-white p-4 rounded overflow-x-auto">
           {`import YouTubePlayer from '../components/YouTubePlayer';
 import YouTubePlayerWithTimestamps from '../components/YouTubePlayerWithTimestamps';
-import { TimestampItem } from '../components/YouTubeTimestamp';
+import { TimestampItem } from '../components/timestamp/TimestampItem';
 
 // 基本的な使用法
 <YouTubePlayer url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" />
