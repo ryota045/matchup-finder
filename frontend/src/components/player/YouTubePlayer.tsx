@@ -34,7 +34,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
 
   // URLが変更されたときに埋め込みURLを更新
   useEffect(() => {
-    console.log('YouTubePlayer: URLが更新されました', url);
+    // console.log('YouTubePlayer: URLが更新されました', url);
     const newEmbedUrl = createEmbedUrl(url, autoplay);
     setEmbedUrl(newEmbedUrl);
   }, [url, autoplay]);

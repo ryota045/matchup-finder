@@ -71,12 +71,12 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
   
   // デバッグ用ログ
   useEffect(() => {
-    console.log('CharacterGroup mounted:', {
-      charKey,
-      useChara: group.useChara,
-      icon1: group.icon1?.eng,
-      icon2: group.icon2?.eng
-    });
+    // console.log('CharacterGroup mounted:', {
+    //   charKey,
+    //   useChara: group.useChara,
+    //   icon1: group.icon1?.eng,
+    //   icon2: group.icon2?.eng
+    // });
   }, [charKey, group.useChara, group.icon1, group.icon2]);
   
   // 初回レンダリング後にフラグを更新
@@ -117,8 +117,8 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
           video={video}
           isSelected={isSelected}
           onClick={() => {
-            console.log('動画選択: インデックス', videoIndexInAllVideos, 'を選択');
-            console.log('選択した動画:', video.title, video.directory, video.url);
+            // console.log('動画選択: インデックス', videoIndexInAllVideos, 'を選択');
+            // console.log('選択した動画:', video.title, video.directory, video.url);
             if (onVideoSelect && videoIndexInAllVideos !== -1) {
               setSelectedVideoIndex(videoIndex);
               // onVideoSelect(videoIndexInAllVideos);

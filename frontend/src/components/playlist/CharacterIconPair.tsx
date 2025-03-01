@@ -49,21 +49,21 @@ const CharacterIconPair: React.FC<CharacterIconPairProps> = ({ icon1, icon2, use
 
   if (useChara && icon1 && icon2) {
     // デバッグ用ログ
-    console.log('CharacterIconPair:', {
-      useChara,
-      icon1: icon1.eng,
-      icon2: icon2.eng,
-      match1: icon1.eng.toLowerCase() === useChara.toLowerCase(),
-      match2: icon2.eng.toLowerCase() === useChara.toLowerCase()
-    });
+    // console.log('CharacterIconPair:', {
+    //   useChara,
+    //   icon1: icon1.eng,
+    //   icon2: icon2.eng,
+    //   match1: icon1.eng.toLowerCase() === useChara.toLowerCase(),
+    //   match2: icon2.eng.toLowerCase() === useChara.toLowerCase()
+    // });
 
     // 使用キャラクターが2つ目のアイコンの場合、順序を入れ替える
     if (icon2.eng.toLowerCase() === useChara.toLowerCase()) {
-      console.log('Swapping icons: useChara matches icon2');
+      // console.log('Swapping icons: useChara matches icon2');
       leftIcon = icon2;
       rightIcon = icon1;
     } else if (icon1.eng.toLowerCase() !== useChara.toLowerCase()) {
-      console.log('Warning: useChara does not match either icon');
+      // console.log('Warning: useChara does not match either icon');
     }
   }
 

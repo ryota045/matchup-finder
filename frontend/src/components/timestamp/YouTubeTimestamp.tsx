@@ -164,18 +164,18 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
     
     const currentUrl = removeTimestampFromUrl(url);
 
-    console.log("currentUrl:", currentUrl);
+    // console.log("currentUrl:", currentUrl);
     
     // すべての動画からURLが一致するタイムスタンプを収集
     const matchingTimestamps: TimestampItem[] = [];
 
-    console.log("allVideos length:", allVideos?.length || 0);
+    // console.log("allVideos length:", allVideos?.length || 0);
     
     // 検索結果で絞られる前の全ての動画から検索
     const videosToSearch = allVideos && allVideos.length > 0 ? allVideos : videos;
     
-    console.log("videosToSearch length:", videosToSearch.length);
-    console.log("currentUrl:", currentUrl);
+    // console.log("videosToSearch length:", videosToSearch.length);
+    // console.log("currentUrl:", currentUrl);
     
     // まず、現在選択されている動画と完全に一致する動画のタイムスタンプを追加
     videosToSearch.forEach(video => {
@@ -184,7 +184,7 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
       
       // URLが一致し、かつタイトルとディレクトリも一致する場合のみタイムスタンプを追加
       if (videoUrl === currentUrl) {
-        console.log("完全一致 (URL, タイトル, ディレクトリ):", video.title, video.directory, videoUrl);
+        // console.log("完全一致 (URL, タイトル, ディレクトリ):", video.title, video.directory, videoUrl);
         
         video.timestamps.forEach(timestamp => {
           // 元の動画情報を保持するために新しいプロパティを追加
@@ -196,7 +196,7 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
             return vUrl === videoUrl && v.title === video.title && v.directory === video.directory;
           });
           
-          console.log(`タイムスタンプ追加: ${timestamp.time}秒, 動画: ${video.title}, インデックス: ${sourceVideoIndex}`);
+          // console.log(`タイムスタンプ追加: ${timestamp.time}秒, 動画: ${video.title}, インデックス: ${sourceVideoIndex}`);
           
           matchingTimestamps.push({
             ...timestamp,
@@ -208,7 +208,7 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
           });
         });
       } else if (videoUrl === currentUrl) {
-        console.log("URLは一致するが、タイトルまたはディレクトリが異なる:", video.title, video.directory);
+        // console.log("URLは一致するが、タイトルまたはディレクトリが異なる:", video.title, video.directory);
       }
     });
     
@@ -366,7 +366,7 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
           }
         }}
         className="mb-4"
-        contentClassName="p-4"
+        contentClassName="px-4"
         playerContainerRef={playerContainerRef}
       >
         <TimestampList 

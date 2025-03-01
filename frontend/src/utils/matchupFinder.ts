@@ -35,7 +35,7 @@ export async function findMatchupLists() {
       .filter(dirent => dirent.isDirectory())
       .map(dirent => dirent.name);
 
-    console.log(`${directories.length}個のフォルダが見つかりました。`);
+    // console.log(`${directories.length}個のフォルダが見つかりました。`);
 
     // 各ディレクトリ内のmatchup_list.jsonを読み込む
     const matchupLists = [];
@@ -52,18 +52,18 @@ export async function findMatchupLists() {
           content: parsedJson
         });
         
-        console.log(`${dir}のmatchup_list.jsonを読み込みました。`);
+        // console.log(`${dir}のmatchup_list.jsonを読み込みました。`);
       } catch (error: any) {
         if (error.code === 'ENOENT') {
-          console.log(`${dir}にはmatchup_list.jsonが存在しません。`);
+          // console.log(`${dir}にはmatchup_list.jsonが存在しません。`);
         } else {
           console.error(`${jsonPath}の読み込みに失敗しました:`, error);
         }
       }
     }
 
-    console.log('すべてのmatchup_list.jsonの内容:');
-    console.log(JSON.stringify(matchupLists, null, 2));
+    // console.log('すべてのmatchup_list.jsonの内容:');
+    // console.log(JSON.stringify(matchupLists, null, 2));
     
     return matchupLists;
   } catch (error) {
