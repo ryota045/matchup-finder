@@ -40,6 +40,8 @@ export default function MatchupPage() {
         const response = await fetch('/api/matchup');
         const data = await response.json();
 
+        console.log("fetchData:",data);
+
         if (data.success) {
           setMatchupLists(data.data);
           console.log('マッチアップリスト取得成功:', data.data);
@@ -92,10 +94,10 @@ export default function MatchupPage() {
       if (matchupData && typeof matchupData === 'object') {
         // matchupsプロパティがある場合
         if (matchupData.matchups) {
-          console.log('matchupsプロパティあり:', Object.keys(matchupData.matchups));
+          // console.log('matchupsプロパティあり:', Object.keys(matchupData.matchups));
           
           Object.entries(matchupData.matchups).forEach(([key, value]: [string, any]) => {
-            console.log(`マッチアップキー: ${key}`, value);
+            // console.log(`マッチアップキー: ${key}`, value);
             
             // 条件チェック用の変数
             let userCharacterMatched = !hasUserCharacter; // 使用キャラクター条件がない場合はtrueとする
@@ -138,7 +140,7 @@ export default function MatchupPage() {
                 return regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase());
               });
               
-              console.log(`使用キャラクターチェック: [${anotations.join(', ')}] in ${chara1} or ${chara2} = ${userCharacterMatched}`);
+              // console.log(`使用キャラクターチェック: [${anotations.join(', ')}] in ${chara1} or ${chara2} = ${userCharacterMatched}`);
             }
             
             // 対戦キャラクターのチェック
@@ -180,24 +182,67 @@ export default function MatchupPage() {
                 });
               });
               
-              console.log(`対戦キャラクターチェック(OR条件): ${selectedCharacters.join(', ')} in ${chara1} or ${chara2} = ${opponentCharactersMatched}`);
+              // console.log(`対戦キャラクターチェック(OR条件): ${selectedCharacters.join(', ')} in ${chara1} or ${chara2} = ${opponentCharactersMatched}`);
             }
             
             // 両方の条件を満たす場合のみ追加
             if (userCharacterMatched && opponentCharactersMatched) {
-              console.log(`条件一致: ${key}, 使用キャラクター=${userCharacterMatched}, 対戦キャラクター=${opponentCharactersMatched}`);
+              // console.log(`条件一致: ${key}, 使用キャラクター=${userCharacterMatched}, 対戦キャラクター=${opponentCharactersMatched}`);
               
               const videoUrl = value.url || '';
               if (videoUrl) {
                 const timestamps: TimestampItem[] = [];
-                
+                // console.log("timestamps:",value);
                 // タイムスタンプがある場合は追加
                 if (value.timestamps) {
-                  Object.entries(value.timestamps).forEach(([time, label]: [string, any]) => {
-                    timestamps.push({
-                      time: parseInt(time, 10),
-                      label: String(label)
-                    });
+                  Object.entries(value.timestamps).forEach(([time, data]: [string, any]) => {
+                    // データがオブジェクトの場合（video_titleとdetect_timeを含む）
+                    if (typeof data === 'object' && data !== null) {
+                      // detect_timeが時間形式（HH:MM:SS）の場合、秒に変換
+                      let timeInSeconds = 0;
+                      let originalDetectTime = "";
+                      
+                      if (data.detect_time) {
+                        const timeStr = String(data.detect_time);
+                        originalDetectTime = timeStr; // 元の形式を保存
+                        
+                        if (timeStr.includes(':')) {
+                          // HH:MM:SS または MM:SS 形式を秒に変換
+                          const parts = timeStr.split(':').map(Number);
+                          if (parts.length === 3) {
+                            // HH:MM:SS
+                            timeInSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+                          } else if (parts.length === 2) {
+                            // MM:SS
+                            timeInSeconds = parts[0] * 60 + parts[1];
+                          }
+                        } else {
+                          // 数値の場合はそのまま使用
+                          timeInSeconds = parseInt(timeStr, 10);
+                        }
+                      } else {
+                        // detect_timeがない場合はキーを時間として使用
+                        timeInSeconds = parseInt(time, 10);
+                      }
+
+                      // デバッグ用
+                      // console.log("Timestamp data:", data);
+
+                      timestamps.push({
+                        time: timeInSeconds,
+                        label: data.video_title || data.label || String(data),
+                        videoTitle: data.video_title || value.video_title || key,
+                        originalDetectTime: originalDetectTime
+                      });
+                    } else {
+                      // 従来の形式（時間: ラベル）
+                      timestamps.push({
+                        time: parseInt(time, 10),
+                        label: value.video_title || String(data),
+                        videoTitle: value.video_title || key,
+                        originalDetectTime: time
+                      });
+                    }
                   });
                 }
                 
@@ -219,7 +264,7 @@ export default function MatchupPage() {
                   matchupMap[matchupCombinationKey] = {
                     url: videoUrl,
                     timestamps,
-                    title: value.title || key,
+                    title: value.video_title || key,
                     matchupKey: key,
                     directory: item.directory,
                     chara1,
@@ -232,11 +277,11 @@ export default function MatchupPage() {
         } 
         // matchupsプロパティがない場合、直接オブジェクトをチェック
         else {
-          console.log('直接オブジェクトをチェック:', Object.keys(matchupData));
+          // console.log('直接オブジェクトをチェック:', Object.keys(matchupData));
           
           Object.entries(matchupData).forEach(([key, value]: [string, any]) => {
             if (typeof value === 'object' && value !== null) {
-              console.log(`キー: ${key}`, value);
+              // console.log(`キー: ${key}`, value);
               
               // 条件チェック用の変数
               let userCharacterMatched = !hasUserCharacter; // 使用キャラクター条件がない場合はtrueとする
@@ -278,7 +323,7 @@ export default function MatchupPage() {
                   return regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase());
                 });
                 
-                console.log(`使用キャラクターチェック: [${anotations.join(', ')}] in ${chara1} or ${chara2} = ${userCharacterMatched}`);
+                // console.log(`使用キャラクターチェック: [${anotations.join(', ')}] in ${chara1} or ${chara2} = ${userCharacterMatched}`);
               }
               
               // 対戦キャラクターのチェック
@@ -320,25 +365,66 @@ export default function MatchupPage() {
                   });
                 });
                 
-                console.log(`対戦キャラクターチェック(OR条件): ${selectedCharacters.join(', ')} in ${chara1} or ${chara2} = ${opponentCharactersMatched}`);
+                // console.log(`対戦キャラクターチェック(OR条件): ${selectedCharacters.join(', ')} in ${chara1} or ${chara2} = ${opponentCharactersMatched}`);
               }
               
               // 両方の条件を満たす場合のみ追加
               if (userCharacterMatched && opponentCharactersMatched) {
-                console.log(`条件一致: ${key}, 使用キャラクター=${userCharacterMatched}, 対戦キャラクター=${opponentCharactersMatched}`);
+                // console.log(`条件一致: ${key}, 使用キャラクター=${userCharacterMatched}, 対戦キャラクター=${opponentCharactersMatched}`);
                 
                 const videoUrl = value.url || '';
                 if (videoUrl) {
                   const timestamps: TimestampItem[] = [];
                   
                   // タイムスタンプがある場合は追加
-                  if (value.timestamps) {
-                    Object.entries(value.timestamps).forEach(([time, label]: [string, any]) => {
-                      timestamps.push({
-                        time: parseInt(time, 10),
-                        label: String(label)
-                      });
-                    });
+                  if (value.detect_time) {
+                    // Object.entries(value.timestamps).forEach(([time, data]: [string, any]) => {
+                      // console.log("data:",data);
+                      // データがオブジェクトの場合（video_titleとdetect_timeを含む）
+                      // if (typeof data === 'object' && data !== null) {
+                        // detect_timeが時間形式（HH:MM:SS）の場合、秒に変換
+                        let timeInSeconds = 0;
+                        let originalDetectTime = "";
+                        
+                        if (value.detect_time) {
+                          const timeStr = String(value.detect_time);
+                          originalDetectTime = timeStr; // 元の形式を保存
+                          
+                          if (timeStr.includes(':')) {
+                            // HH:MM:SS または MM:SS 形式を秒に変換
+                            const parts = timeStr.split(':').map(Number);
+                            if (parts.length === 3) {
+                              // HH:MM:SS
+                              timeInSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+                            } else if (parts.length === 2) {
+                              // MM:SS
+                              timeInSeconds = parts[0] * 60 + parts[1];
+                            }
+                          } else {
+                            // 数値の場合はそのまま使用
+                            timeInSeconds = parseInt(timeStr, 10);
+                          }
+                        // } else {
+                        //   // detect_timeがない場合はキーを時間として使用
+                        //   timeInSeconds = parseInt(value.detect_time, 10);
+                        // }
+
+                        timestamps.push({
+                          time: timeInSeconds,
+                          label: value.video_title,
+                          videoTitle: value.video_title || key,
+                          originalDetectTime: originalDetectTime
+                        });
+                      } else {
+                        // 従来の形式（時間: ラベル）
+                        timestamps.push({
+                          time: parseInt(value.detect_time, 10),
+                          label: value.video_title,
+                          videoTitle: value.video_title || key,
+                          originalDetectTime: value.detect_time
+                        });
+                      }
+                    // });
                   }
                   
                   // キャラクターの組み合わせを特定するキーを作成
@@ -352,14 +438,14 @@ export default function MatchupPage() {
                     // 既存のエントリにタイムスタンプを追加
                     matchupMap[matchupCombinationKey].timestamps = [
                       ...matchupMap[matchupCombinationKey].timestamps,
-                      ...timestamps
+                      ...timestamps,
                     ];
                   } else {
                     // 新しいエントリを作成
                     matchupMap[matchupCombinationKey] = {
                       url: videoUrl,
                       timestamps,
-                      title: value.title || key,
+                      title: value.video_title || key,
                       matchupKey: key,
                       directory: item.directory,
                       chara1,
@@ -484,6 +570,8 @@ export default function MatchupPage() {
     }));
   };
 
+  // console.log(matchupVideos);
+
   return (
     <div className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-6">マッチアップファインダー</h1>
@@ -523,10 +611,10 @@ export default function MatchupPage() {
                 {/* 動画プレーヤー部分 */}
                 <div className="lg:col-span-3">
                   {selectedVideoIndex >= 0 && matchupVideos[selectedVideoIndex] && (
-                    <div className="bg-white rounded-lg shadow-md p-4">
+                    <div className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border border-border dark:border-gray-800 p-4">
                       <div className="flex items-center justify-between mb-4">
                         <h3 className="text-lg font-semibold">{matchupVideos[selectedVideoIndex].matchupKey}</h3>
-                        <span className="text-sm bg-gray-200 px-2 py-1 rounded">
+                        <span className="text-sm bg-muted/30 dark:bg-muted/10 px-2 py-1 rounded">
                           {matchupVideos[selectedVideoIndex].directory}
                         </span>
                       </div>
@@ -541,7 +629,7 @@ export default function MatchupPage() {
                         videos={matchupVideos}
                         selectedVideoIndex={selectedVideoIndex}
                         onVideoSelect={(index) => {
-                          console.log(`動画選択: インデックス ${index} を選択`);
+                          // console.log(`動画選択: インデックス ${index} を選択`);
                           setSelectedVideoIndex(index);
                         }}
                       />
@@ -556,9 +644,9 @@ export default function MatchupPage() {
             <h2 className="text-xl font-semibold mb-4">すべてのマッチアップデータ</h2>
             <div className="grid grid-cols-1 gap-6">
               {matchupLists.map((item, index) => (
-                <div key={index} className="bg-white rounded-lg shadow-md p-4">
+                <div key={index} className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border border-border dark:border-gray-800 p-4">
                   <h2 className="text-xl font-semibold mb-2">ディレクトリ: {item.directory}</h2>
-                  <div className="bg-gray-50 p-4 rounded-md overflow-auto max-h-96">
+                  <div className="bg-muted/20 dark:bg-muted/5 p-4 rounded-md overflow-auto max-h-96 border border-border dark:border-gray-800">
                     <pre className="text-sm">{JSON.stringify(item.content, null, 2)}</pre>
                   </div>
                 </div>
