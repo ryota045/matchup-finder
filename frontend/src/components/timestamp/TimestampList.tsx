@@ -70,8 +70,8 @@ const TimestampList: React.FC<TimestampListProps> = ({
   };
 
   return (
-    <div className="timestamp-list-container bg-card dark:bg-card/95 border-t border-border dark:border-gray-800">
-      <div className="p-2 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+    <div className="timestamp-list-container bg-card dark:bg-card/95 border-border dark:border-gray-800">
+      <div className="p-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
         {timestamps.map((timestamp, index) => (
           <div 
             key={`timestamp-${index}`}

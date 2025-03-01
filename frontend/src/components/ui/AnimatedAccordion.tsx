@@ -80,7 +80,7 @@ const AnimatedAccordion: React.FC<AnimatedAccordionProps> = ({
         const openAccordionContentMaxHeight = currentPlayerHeight - ((accordionsCount - 1) * closedAccordionHeight) - headerHeight;
         
         // 最小値を設定して、極端に小さくならないようにする
-        const minHeight = 100; // 最小高さ（px）
+        const minHeight = 200; // 最小高さ（px）
         const adjustedHeight = `${Math.max(openAccordionContentMaxHeight, minHeight)}px`;
         
         setCalculatedMaxHeight(adjustedHeight);
