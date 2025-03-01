@@ -21,7 +21,11 @@ export const katakanaToHiragana = (str: string): string => {
 };
 
 // 日本語検索用の正規化関数
-export const normalizeJapanese = (str: string): string => {
+export const normalizeJapanese = (str: string | undefined | null): string => {
+  // strがundefinedまたはnullの場合は空文字列を返す
+  if (str === undefined || str === null) {
+    return '';
+  }
   // ひらがなに統一して比較
   return katakanaToHiragana(str.toLowerCase());
 };
@@ -129,8 +133,8 @@ export const getSortedCharacterIcons = () => {
 };
 
 // 検索フィルタリング
-export const filterCharacterIcons = (searchTerm: string) => {
-  if (!searchTerm) return getSortedCharacterIcons();
+export const filterCharacterIcons = (icons: CharacterIcon[], searchTerm: string | undefined | null) => {
+  if (!searchTerm || searchTerm.trim() === '') return getSortedCharacterIcons();
   
   const normalizedSearchTerm = normalizeJapanese(searchTerm);
   

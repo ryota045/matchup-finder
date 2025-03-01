@@ -5,11 +5,13 @@ import YouTubePlayer from '../../components/player/YouTubePlayer';
 import YouTubePlayerWithTimestamps from '../../components/player/YouTubePlayerWithTimestamps';
 import { TimestampItem } from '../../components/timestamp/TimestampItem';
 import CharacterIcons from '../../components/character/CharacterIcons';
+import { characterIcons } from '../../data/characterData';
 // import CharacterIcons from '../../components/CharacterIcons';
 export default function YouTubeExamplePage() {
   const [youtubeUrl, setYoutubeUrl] = useState('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   const [inputUrl, setInputUrl] = useState('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
 
   // サンプルのタイムスタンプ
   const sampleTimestamps: TimestampItem[] = [
@@ -28,7 +30,24 @@ export default function YouTubeExamplePage() {
 
   const handleCharacterClick = (characterName: string) => {
     console.log(`選択されたキャラクター: ${characterName}`);
+    // 選択されたキャラクターを追加または削除
+    setSelectedCharacters(prev => 
+      prev.includes(characterName) 
+        ? prev.filter(char => char !== characterName) 
+        : [...prev, characterName]
+    );
   };
+
+  // 検索フィルタリングされたキャラクターアイコン
+  const filteredIcons = characterIcons.filter(icon => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      icon.eng.toLowerCase().includes(searchLower) ||
+      icon.jp.toLowerCase().includes(searchLower) ||
+      icon.anotation.some(a => a.toLowerCase().includes(searchLower))
+    );
+  });
 
   return (
     <div className="container mx-auto p-4">
@@ -52,7 +71,11 @@ export default function YouTubeExamplePage() {
             />
           </div>
         </div>
-        <CharacterIcons onIconClick={handleCharacterClick} searchTerm={searchTerm} />
+        <CharacterIcons 
+          icons={filteredIcons} 
+          onCharacterClick={handleCharacterClick} 
+          selectedCharacters={selectedCharacters} 
+        />
       </div>
       
       <div className="mb-6">
@@ -106,52 +129,22 @@ export default function YouTubeExamplePage() {
         />
       </div>
       
-      <div className="mt-8 p-4 bg-gray-100 rounded">
-        <h2 className="text-xl font-semibold mb-2">使用方法</h2>
-        <pre className="bg-gray-800 text-white p-4 rounded overflow-x-auto">
-          {`import YouTubePlayer from '../components/YouTubePlayer';
-import YouTubePlayerWithTimestamps from '../components/YouTubePlayerWithTimestamps';
-import { TimestampItem } from '../components/timestamp/TimestampItem';
-
-// 基本的な使用法
-<YouTubePlayer url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" />
-
-// カスタムサイズ
-<YouTubePlayer 
-  url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" 
-  width="640" 
-  height="360" 
+      <div className="mt-8 p-4 bg-muted/20 dark:bg-muted/5 rounded border border-border dark:border-gray-800">
+        <h2 className="text-xl font-semibold mb-2">使用例</h2>
+        <pre className="bg-card dark:bg-black/50 text-foreground p-4 rounded overflow-x-auto border border-border dark:border-gray-800">
+          {`
+// YouTubePlayerWithTimestampsコンポーネントの使用例
+<YouTubePlayerWithTimestamps
+  url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+  timestamps={[
+    { time: 0, label: "イントロ" },
+    { time: 30, label: "サビ" }
+  ]}
+  width="100%"
+  height="480px"
+  autoplay={true}
 />
-
-// 自動再生（ブラウザの設定によっては機能しない場合があります）
-<YouTubePlayer 
-  url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" 
-  autoplay={true} 
-/>
-
-// 特定の時間から開始（例：30秒から）
-<YouTubePlayer 
-  url="https://www.youtube.com/watch?v=dQw4w9WgXcQ&t=30" 
-/>
-
-// 時間指定の形式は様々なものに対応
-// 秒指定: t=30
-// 分秒指定: t=1m30s
-// 時分秒指定: t=1h2m30s
-
-// タイムスタンプ付きプレーヤーの使用例
-// - タイムスタンプクリック時に自動再生
-// - アニメーション付きアコーディオンで開閉可能
-const timestamps: TimestampItem[] = [
-  { time: 0, label: 'イントロ' },
-  { time: 18, label: 'サビ開始' },
-  { time: 43, label: '2番開始' }
-];
-
-<YouTubePlayerWithTimestamps 
-  url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" 
-  timestamps={timestamps}
-/>`}
+          `}
         </pre>
       </div>
     </div>

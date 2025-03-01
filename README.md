@@ -1,6 +1,6 @@
 # Matchup Finder
 
-格闘ゲームのマッチアップ動画を簡単に検索・視聴できるWebアプリケーションです。キャラクター選択からタイムスタンプ付きの動画再生まで、格闘ゲームプレイヤーの学習をサポートします。
+スマブラSPのマッチアップ動画を簡単に検索・視聴できるWebアプリケーションです。キャラクター選択からタイムスタンプ付きの動画再生まで、スマブラSPプレイヤーの学習をサポートします。
 
 ## 機能
 
@@ -40,28 +40,6 @@ matchup-finder/
   - Node.js
   - Express
 
-## 開発環境のセットアップ
-
-### 前提条件
-
-- Node.js (v18以上)
-- npm または yarn
-
-### フロントエンドの起動
-
-```bash
-# リポジトリのクローン
-git clone https://github.com/yourusername/matchup-finder.git
-cd matchup-finder
-
-# フロントエンドの依存関係インストール
-cd frontend
-npm install
-
-# 開発サーバーの起動
-npm run dev
-```
-
 ブラウザで [http://localhost:3000](http://localhost:3000) を開くと、アプリケーションが表示されます。
 
 ## 主要コンポーネント
@@ -69,30 +47,6 @@ npm run dev
 ### YouTubePlayerWithTimestamps
 
 YouTube動画プレーヤーとタイムスタンプリストを組み合わせたコンポーネントです。タイムスタンプをクリックすると、動画の該当時間にジャンプします。
-
-```tsx
-<YouTubePlayerWithTimestamps
-  url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-  timestamps={[
-    { time: 0, label: "イントロ" },
-    { time: 30, label: "サビ" }
-  ]}
-  videos={relatedVideos}
-  selectedVideoIndex={0}
-  onVideoSelect={handleVideoSelect}
-/>
-```
-
-### CharacterSelector
-
-キャラクター選択用のコンポーネントです。使用キャラクターと対戦キャラクターを選択できます。
-
-```tsx
-<CharacterSelector 
-  onSingleCharacterSelect={setSelectedCharacter}
-  onMultipleCharactersSelect={setSelectedCharacters}
-/>
-```
 
 ## ディレクトリ構造の詳細
 
@@ -124,22 +78,6 @@ YouTube動画プレーヤーとタイムスタンプリストを組み合わせ�
 
 - **utils/**: ユーティリティ関数
   - `YouTubeUtils.ts`: YouTube関連のユーティリティ関数
-
-## 貢献方法
-
-1. このリポジトリをフォークする
-2. 機能ブランチを作成する (`git checkout -b feature/amazing-feature`)
-3. 変更をコミットする (`git commit -m 'Add some amazing feature'`)
-4. ブランチにプッシュする (`git push origin feature/amazing-feature`)
-5. プルリクエストを作成する
-
-## ライセンス
-
-[MIT License](LICENSE)
-
-## 連絡先
-
-プロジェクトオーナー: [あなたの名前](mailto:your.email@example.com)
 
 ---
 

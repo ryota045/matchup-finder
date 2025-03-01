@@ -63,16 +63,16 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
   const totalTimestamps = group.videos.reduce((sum, video) => sum + video.timestamps.length, 0);
   
   return (
-    <div className="border rounded-md overflow-hidden mx-2 my-2">
+    <div className="border border-border rounded-md overflow-hidden mx-2 my-2">
       {/* アコーディオンヘッダー */}
       <button
-        className="w-full flex items-center justify-between p-2 bg-gray-50 hover:bg-gray-100 transition-colors"
+        className="w-full flex items-center justify-between p-2 bg-muted/20 hover:bg-muted/40"
         onClick={() => toggleAccordion(directory, charKey)}
       >
         <div className="flex items-center">
           {/* キャラクターアイコン */}
           <CharacterIconPair icon1={group.icon1} icon2={group.icon2} />
-          <span className="text-xs text-gray-500">
+          <span className="text-xs text-muted-foreground">
             {group.videos.length}件 ({totalTimestamps}タイムスタンプ)
           </span>
         </div>
