@@ -40,8 +40,8 @@ interface YouTubePlayerWithTimestampsProps {
  * <YouTubePlayerWithTimestamps
  *   url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
  *   timestamps={[
- *     { time: 0, label: "イントロ" },
- *     { time: 30, label: "サビ" }
+ *     { time: 0, label: "イントロ", videoTitle: "動画タイトル" },
+ *     { time: 30, label: "サビ", videoTitle: "動画タイトル" }
  *   ]}
  *   videos={relatedVideos}
  *   selectedVideoIndex={0}
@@ -67,8 +67,33 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   useEffect(() => {
     console.log('YouTubePlayerWithTimestamps: 親から渡されたURLが更新されました', url);
     setCurrentUrl(url);
-    setCurrentTimestamps(timestamps);
-  }, [url, timestamps]);
+    
+    // 選択された動画のタイトルをタイムスタンプに追加
+    if (selectedVideoIndex >= 0 && selectedVideoIndex < videos.length) {
+      const selectedVideo = videos[selectedVideoIndex];
+      
+      // タイムスタンプがない場合は、デフォルトのタイムスタンプを作成
+      if (timestamps.length === 0) {
+        const defaultTimestamps: TimestampItem[] = [
+          {
+            time: 0,
+            label: "動画の開始",
+            videoTitle: selectedVideo.title
+          }
+        ];
+        setCurrentTimestamps(defaultTimestamps);
+      } else {
+        // 既存のタイムスタンプに動画タイトルを追加
+        const updatedTimestamps = timestamps.map(timestamp => ({
+          ...timestamp,
+          videoTitle: timestamp.videoTitle || selectedVideo.title
+        }));
+        setCurrentTimestamps(updatedTimestamps);
+      }
+    } else {
+      setCurrentTimestamps(timestamps);
+    }
+  }, [url, timestamps, videos, selectedVideoIndex]);
 
   /**
    * タイムスタンプがクリックされたときの処理
@@ -97,9 +122,9 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   };
 
   return (
-    <div className="youtube-player-with-timestamps">
+    <div className="youtube-player-with-timestamps bg-background dark:bg-background">
       <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-grow" style={{ minHeight: typeof height === 'string' && height.endsWith('px') ? height : typeof height === 'number' ? `${height}px` : `${height}px` }}>
+        <div className="flex-grow rounded-lg overflow-hidden border border-border dark:border-gray-800 bg-card/5 dark:bg-black/30 shadow-sm dark:shadow-xl">
           <YouTubePlayer 
             url={currentUrl} 
             width={width} 
@@ -107,7 +132,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
             autoplay={true} 
           />
         </div>
-        <div className="md:w-80">
+        <div className="md:w-80 w-full">
           <YouTubeTimestamp 
             timestamps={currentTimestamps} 
             onTimestampClick={handleTimestampClick}
