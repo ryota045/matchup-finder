@@ -1,25 +1,26 @@
 import React from 'react';
 import { TimestampItem } from '../timestamp/TimestampItem';
+import { formatTime } from '../utils/YouTubeUtils';
 
 /**
  * マッチアップ動画のデータ構造
  * @interface MatchupVideo
  * @property {string} url - 動画のURL
- * @property {TimestampItem[]} timestamps - タイムスタンプのリスト
  * @property {string} title - 動画のタイトル
- * @property {string} matchupKey - マッチアップの一意のキー
- * @property {string} directory - 動画が属するディレクトリ
  * @property {string} chara1 - 1人目のキャラクター名
  * @property {string} chara2 - 2人目のキャラクター名
+ * @property {string} matchupKey - マッチアップの一意のキー
+ * @property {string} directory - 動画が属するディレクトリ
+ * @property {TimestampItem[]} timestamps - 動画のタイムスタンプリスト
  */
 export interface MatchupVideo {
   url: string;
-  timestamps: TimestampItem[];
   title: string;
-  matchupKey: string;
-  directory: string;
   chara1: string;
   chara2: string;
+  matchupKey: string;
+  directory: string;
+  timestamps: TimestampItem[];
 }
 
 /**
@@ -44,20 +45,60 @@ interface VideoItemProps {
  * <VideoItem
  *   video={videoData}
  *   isSelected={true}
- *   onClick={() => handleVideoSelect(videoIndex)}
+ *   onClick={handleVideoSelect}
  * />
  * ```
  */
 const VideoItem: React.FC<VideoItemProps> = ({ video, isSelected, onClick }) => {
+  // タイムスタンプの情報を取得
+  const firstTimestamp = video.timestamps.length > 0 ? video.timestamps[0] : null;
+  const hasMultipleTimestamps = video.timestamps.length > 1;
+  
+  // タイムスタンプがない場合は、デフォルトのタイムスタンプを作成
+  if (video.timestamps.length === 0) {
+    video.timestamps = [
+      {
+        time: 0,
+        label: video.title || "動画の開始",
+        videoTitle: video.title,
+        originalDetectTime: "00:00"
+      }
+    ];
+  }
+  
+  // デバッグ用
+  // console.log("VideoItem timestamps:", video.timestamps);
+  
   return (
     <div 
-      className={`p-2 rounded cursor-pointer transition-colors ${
-        isSelected ? 'bg-blue-100 border-l-4 border-blue-500' : 'hover:bg-gray-100'
-      }`}
+      className={`
+        playlist-item
+        ${isSelected ? 'playlist-item-active' : ''}
+      `}
       onClick={onClick}
     >
-      <div className="text-sm font-medium mb-1 truncate">{video.title || video.matchupKey}</div>
-      <div className="text-xs text-gray-500">{video.timestamps.length} タイムスタンプ</div>
+      <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full bg-primary/10 text-primary">
+        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div className="flex-grow min-w-0">
+        <h4 className="text-sm font-medium truncate">{video.title}</h4>
+        <div className="flex items-center mt-1">
+          {firstTimestamp ? (
+            <span className="text-xs text-muted-foreground">
+              {/* hh:mm:ss形式でタイムスタンプを表示 */}
+              {formatTime(firstTimestamp.time)}
+              {hasMultipleTimestamps && ` (他 ${video.timestamps.length - 1} 件)`}
+            </span>
+          ) : (
+            <span className="text-xs text-muted-foreground">
+              タイムスタンプなし
+            </span>
+          )}
+        </div>
+      </div>
     </div>
   );
 };

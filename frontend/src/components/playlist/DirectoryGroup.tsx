@@ -7,24 +7,22 @@ import { CharacterIcon } from './CharacterIconPair';
  * ディレクトリグループコンポーネントのプロパティ
  * @interface DirectoryGroupProps
  * @property {string} directory - ディレクトリ名
- * @property {MatchupVideo[]} directoryVideos - ディレクトリに属する動画リスト
+ * @property {MatchupVideo[]} videos - ディレクトリに属する動画リスト
  * @property {boolean} isExpanded - ディレクトリが展開されているかどうか
- * @property {(directory: string) => void} toggleDirectoryAccordion - ディレクトリアコーディオンの開閉を切り替える関数
+ * @property {() => void} toggleDirectoryAccordion - ディレクトリアコーディオンの開閉を切り替える関数
  * @property {Object} expandedGroups - 展開されているキャラクターグループの状態
  * @property {(directory: string, charKey: string) => void} toggleAccordion - キャラクターグループアコーディオンの開閉を切り替える関数
- * @property {MatchupVideo[]} videos - 全ての動画リスト
  * @property {number} selectedVideoIndex - 選択されている動画のインデックス
  * @property {(index: number) => void} onVideoSelect - 動画が選択されたときのコールバック関数
  * @property {(videos: MatchupVideo[]) => Object} getCharacterGroupedVideos - 動画をキャラクターごとにグループ化する関数
  */
 interface DirectoryGroupProps {
   directory: string;
-  directoryVideos: MatchupVideo[];
+  videos: MatchupVideo[];
   isExpanded: boolean;
-  toggleDirectoryAccordion: (directory: string) => void;
+  toggleDirectoryAccordion: () => void;
   expandedGroups: {[key: string]: boolean};
   toggleAccordion: (directory: string, charKey: string) => void;
-  videos: MatchupVideo[];
   selectedVideoIndex: number;
   onVideoSelect: (index: number) => void;
   getCharacterGroupedVideos: (videos: MatchupVideo[]) => {[key: string]: {icon1: CharacterIcon | null, icon2: CharacterIcon | null, videos: MatchupVideo[]}};
@@ -38,12 +36,11 @@ interface DirectoryGroupProps {
  * ```tsx
  * <DirectoryGroup
  *   directory="SF6"
- *   directoryVideos={sf6Videos}
+ *   videos={sf6Videos}
  *   isExpanded={true}
- *   toggleDirectoryAccordion={toggleDirectoryAccordion}
+ *   toggleDirectoryAccordion={() => toggleDirectoryAccordion("SF6")}
  *   expandedGroups={expandedGroups}
  *   toggleAccordion={toggleAccordion}
- *   videos={allVideos}
  *   selectedVideoIndex={0}
  *   onVideoSelect={handleVideoSelect}
  *   getCharacterGroupedVideos={getCharacterGroupedVideos}
@@ -52,24 +49,23 @@ interface DirectoryGroupProps {
  */
 const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
   directory,
-  directoryVideos,
+  videos,
   isExpanded,
   toggleDirectoryAccordion,
   expandedGroups,
   toggleAccordion,
-  videos,
   selectedVideoIndex,
   onVideoSelect,
   getCharacterGroupedVideos
 }) => {
   return (
-    <div className="mb-2 border rounded-md overflow-hidden mx-2 my-2">
+    <div className="mb-2 border border-border rounded-md overflow-hidden mx-2 my-2">
       {/* ディレクトリアコーディオンヘッダー */}
       <button
-        className="w-full flex items-center justify-between p-2 bg-gray-100 hover:bg-gray-200 transition-colors"
-        onClick={() => toggleDirectoryAccordion(directory)}
+        className="w-full flex items-center justify-between p-2 bg-muted/30 hover:bg-muted/50"
+        onClick={toggleDirectoryAccordion}
       >
-        <h4 className="font-medium text-gray-700 text-sm">{directory}</h4>
+        <h4 className="font-medium text-foreground text-sm">{directory}</h4>
         <svg 
           className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'transform rotate-180' : ''}`} 
           fill="none" 
@@ -88,10 +84,10 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
         }`}
       >
         <div className="space-y-2">
-          {Object.entries(getCharacterGroupedVideos(directoryVideos)).map(([charKey, group]) => {
+          {Object.entries(getCharacterGroupedVideos(videos)).map(([charKey, group]) => {
             // ディレクトリとキャラクターの組み合わせでユニークなキーを作成
             const uniqueKey = `${directory}-${charKey}`;
-            const isExpanded = expandedGroups[uniqueKey] || false;
+            const isGroupExpanded = expandedGroups[uniqueKey] || false;
             
             return (
               <CharacterGroup
@@ -99,7 +95,7 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
                 charKey={charKey}
                 directory={directory}
                 group={group}
-                isExpanded={isExpanded}
+                isExpanded={isGroupExpanded}
                 toggleAccordion={toggleAccordion}
                 videos={videos}
                 selectedVideoIndex={selectedVideoIndex}

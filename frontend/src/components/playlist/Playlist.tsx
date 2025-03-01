@@ -30,7 +30,7 @@ interface PlaylistProps {
   selectedVideoIndex: number;
   onVideoSelect: (index: number) => void;
   getCharacterGroupedVideos: (videos: MatchupVideo[]) => {[key: string]: {icon1: CharacterIcon | null, icon2: CharacterIcon | null, videos: MatchupVideo[]}};
-  setIsOpen: (isOpen: boolean) => void;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 /**
@@ -70,36 +70,40 @@ const Playlist: React.FC<PlaylistProps> = ({
   if (videos.length === 0) return null;
   
   return (
-    <div className="bg-gray-100 rounded overflow-hidden mb-4">
-      <AccordionHeader
-        title="プレイリスト"
-        count={videos.length}
-        isOpen={isOpen}
-        onClick={() => setIsOpen(!isOpen)}
-      />
-      
-      <div 
-        className={`transition-all duration-500 ease-in-out overflow-hidden ${
-          isOpen ? 'max-h-[600px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
-      >
-        <div className="max-h-[800px] overflow-y-auto custom-scrollbar">
-          {Object.entries(groupedVideos).map(([directory, directoryVideos]) => (
-            <DirectoryGroup
-              key={directory}
-              directory={directory}
-              directoryVideos={directoryVideos}
-              isExpanded={expandedDirectories[directory] || false}
-              toggleDirectoryAccordion={toggleDirectoryAccordion}
-              expandedGroups={expandedGroups}
-              toggleAccordion={toggleAccordion}
-              videos={videos}
-              selectedVideoIndex={selectedVideoIndex}
-              onVideoSelect={onVideoSelect}
-              getCharacterGroupedVideos={getCharacterGroupedVideos}
-            />
-          ))}
-        </div>
+    <div className="playlist-container mb-4">
+      <div className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border border-border dark:border-gray-800 overflow-hidden">
+        <AccordionHeader
+          title={`プレイリスト (${videos.length})`}
+          isOpen={isOpen}
+          onClick={() => setIsOpen(!isOpen)}
+        />
+        
+        {isOpen && (
+          <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
+            {Object.keys(groupedVideos).length > 0 ? (
+              <div className="divide-y divide-border dark:divide-gray-800">
+                {Object.keys(groupedVideos).map(directory => (
+                  <DirectoryGroup
+                    key={directory}
+                    directory={directory}
+                    videos={groupedVideos[directory]}
+                    isExpanded={expandedDirectories[directory]}
+                    toggleDirectoryAccordion={() => toggleDirectoryAccordion(directory)}
+                    expandedGroups={expandedGroups}
+                    toggleAccordion={toggleAccordion}
+                    selectedVideoIndex={selectedVideoIndex}
+                    onVideoSelect={onVideoSelect}
+                    getCharacterGroupedVideos={getCharacterGroupedVideos}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="p-4 text-center text-muted-foreground">
+                プレイリストが空です
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
