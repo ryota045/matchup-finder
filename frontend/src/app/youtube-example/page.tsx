@@ -5,11 +5,13 @@ import YouTubePlayer from '../../components/player/YouTubePlayer';
 import YouTubePlayerWithTimestamps from '../../components/player/YouTubePlayerWithTimestamps';
 import { TimestampItem } from '../../components/timestamp/TimestampItem';
 import CharacterIcons from '../../components/character/CharacterIcons';
+import { characterIcons } from '../../data/characterData';
 // import CharacterIcons from '../../components/CharacterIcons';
 export default function YouTubeExamplePage() {
   const [youtubeUrl, setYoutubeUrl] = useState('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   const [inputUrl, setInputUrl] = useState('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCharacters, setSelectedCharacters] = useState<string[]>([]);
 
   // サンプルのタイムスタンプ
   const sampleTimestamps: TimestampItem[] = [
@@ -28,7 +30,24 @@ export default function YouTubeExamplePage() {
 
   const handleCharacterClick = (characterName: string) => {
     console.log(`選択されたキャラクター: ${characterName}`);
+    // 選択されたキャラクターを追加または削除
+    setSelectedCharacters(prev => 
+      prev.includes(characterName) 
+        ? prev.filter(char => char !== characterName) 
+        : [...prev, characterName]
+    );
   };
+
+  // 検索フィルタリングされたキャラクターアイコン
+  const filteredIcons = characterIcons.filter(icon => {
+    if (!searchTerm) return true;
+    const searchLower = searchTerm.toLowerCase();
+    return (
+      icon.eng.toLowerCase().includes(searchLower) ||
+      icon.jp.toLowerCase().includes(searchLower) ||
+      icon.anotation.some(a => a.toLowerCase().includes(searchLower))
+    );
+  });
 
   return (
     <div className="container mx-auto p-4">
@@ -52,7 +71,11 @@ export default function YouTubeExamplePage() {
             />
           </div>
         </div>
-        <CharacterIcons onIconClick={handleCharacterClick} searchTerm={searchTerm} />
+        <CharacterIcons 
+          icons={filteredIcons} 
+          onCharacterClick={handleCharacterClick} 
+          selectedCharacters={selectedCharacters} 
+        />
       </div>
       
       <div className="mb-6">
