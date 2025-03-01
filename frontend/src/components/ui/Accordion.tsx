@@ -22,40 +22,29 @@ export interface AccordionHeaderProps {
  * @example
  * ```tsx
  * <AccordionHeader
- *   title="プレイリスト"
- *   count={5}
+ *   title="タイムスタンプ"
  *   isOpen={isOpen}
  *   onClick={() => setIsOpen(!isOpen)}
  * />
  * ```
  */
-export const AccordionHeader: React.FC<AccordionHeaderProps> = ({ 
-  title, 
-  count, 
-  isOpen, 
-  onClick 
-}) => {
+export const AccordionHeader: React.FC<AccordionHeaderProps> = ({ title, isOpen, onClick }) => {
   return (
-    <div 
-      className="flex items-center justify-between p-3 bg-gray-200 cursor-pointer hover:bg-gray-300 transition-colors"
+    <button
+      className="w-full flex items-center justify-between p-3 bg-muted/20 dark:bg-muted/5 hover:bg-muted/30 dark:hover:bg-muted/10 border-b border-border dark:border-gray-800"
       onClick={onClick}
-      aria-expanded={isOpen}
-      role="button"
-      tabIndex={0}
-      aria-label={`${title}を開閉`}
     >
-      <h3 className="text-lg font-semibold">
-        {title} {count !== undefined && `(${count}件)`}
-      </h3>
-      <span 
-        className={`text-gray-600 transform transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180' : 'rotate-0'}`}
-        aria-hidden="true"
+      <h3 className="font-medium text-foreground">{title}</h3>
+      <svg 
+        className={`w-5 h-5 text-foreground transition-transform duration-300 ${isOpen ? 'transform rotate-180' : ''}`} 
+        fill="none" 
+        stroke="currentColor" 
+        viewBox="0 0 24 24" 
+        xmlns="http://www.w3.org/2000/svg"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-          <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-        </svg>
-      </span>
-    </div>
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7"></path>
+      </svg>
+    </button>
   );
 };
 
@@ -90,11 +79,13 @@ export const AccordionContent: React.FC<AccordionContentProps> = ({
 }) => {
   return (
     <div 
-      className={`transition-all duration-500 ease-in-out overflow-hidden ${
-        isOpen ? `max-h-[${maxHeight}] opacity-100` : 'max-h-0 opacity-0'
+      className={`transition-all duration-300 ease-in-out overflow-hidden bg-card dark:bg-card/80 ${
+        isOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
       }`}
     >
-      {children}
+      <div className="p-4">
+        {children}
+      </div>
     </div>
   );
 };
@@ -137,7 +128,7 @@ export const Accordion: React.FC<AccordionProps> = ({
   const [isOpen, setIsOpen] = React.useState(defaultOpen);
 
   return (
-    <div className="bg-gray-100 rounded overflow-hidden mb-4">
+    <div className="bg-card dark:bg-card/95 rounded overflow-hidden mb-4 border border-border dark:border-gray-800">
       <AccordionHeader
         title={title}
         count={count}

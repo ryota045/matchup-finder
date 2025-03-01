@@ -1,19 +1,21 @@
 import React, { useRef, useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import TimestampItemComponent, { TimestampItem } from './TimestampItem';
+import { Timestamp } from '../../types/timestamp';
 
 /**
- * タイムスタンプリストコンポーネントのプロパティ
+ * タイムスタンプリストのプロパティ
  * @interface TimestampListProps
  * @property {TimestampItem[]} timestamps - タイムスタンプのリスト
- * @property {number} currentTime - 現在の再生時間（秒）
+ * @property {number} [currentTime=0] - 現在の再生時間（秒）
  * @property {(time: number) => void} onTimestampClick - タイムスタンプがクリックされたときのコールバック関数
- * @property {boolean} isOpen - リストが開いているかどうか
+ * @property {boolean} [isOpen=true] - リストが開いているかどうか
  */
 interface TimestampListProps {
   timestamps: TimestampItem[];
-  currentTime: number;
+  currentTime?: number;
   onTimestampClick: (time: number) => void;
-  isOpen: boolean;
+  isOpen?: boolean;
 }
 
 /**
@@ -24,8 +26,8 @@ interface TimestampListProps {
  * ```tsx
  * <TimestampList
  *   timestamps={[
- *     { time: 0, label: "イントロ" },
- *     { time: 30, label: "サビ" }
+ *     { time: 0, label: "イントロ", videoTitle: "動画タイトル" },
+ *     { time: 30, label: "サビ", videoTitle: "動画タイトル" }
  *   ]}
  *   currentTime={15}
  *   onTimestampClick={handleTimestampClick}
@@ -35,25 +37,36 @@ interface TimestampListProps {
  */
 const TimestampList: React.FC<TimestampListProps> = ({
   timestamps,
-  currentTime,
+  currentTime = 0,
   onTimestampClick,
-  isOpen
+  isOpen = true
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [contentHeight, setContentHeight] = useState<number | undefined>(undefined);
-  
-  // コンポーネントがマウントされたとき、またはタイムスタンプが変更されたときに高さを計算
+  const [height, setHeight] = useState<number | "auto">("auto");
+
+  // コンテンツの高さを計算
   useEffect(() => {
     if (contentRef.current) {
-      setContentHeight(contentRef.current.scrollHeight);
+      const resizeObserver = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          setHeight(entry.contentRect.height);
+        }
+      });
+
+      resizeObserver.observe(contentRef.current);
+      return () => {
+        if (contentRef.current) {
+          resizeObserver.unobserve(contentRef.current);
+        }
+      };
     }
-  }, [timestamps]);
+  }, []);
 
   // ウィンドウのリサイズ時にも高さを再計算
   useEffect(() => {
     const handleResize = () => {
       if (contentRef.current) {
-        setContentHeight(contentRef.current.scrollHeight);
+        setHeight(contentRef.current.scrollHeight);
       }
     };
 
@@ -63,36 +76,103 @@ const TimestampList: React.FC<TimestampListProps> = ({
     };
   }, []);
 
-  if (timestamps.length === 0) return null;
+  // 現在の再生時間に最も近いタイムスタンプを見つける
+  const findActiveTimestamp = () => {
+    if (!timestamps.length) return -1;
+    
+    let activeIndex = -1;
+    let minDiff = Number.MAX_SAFE_INTEGER;
+    
+    timestamps.forEach((timestamp, index) => {
+      // 現在の再生時間以下で最も近いタイムスタンプを選択
+      if (timestamp.time <= currentTime) {
+        const diff = currentTime - timestamp.time;
+        if (diff < minDiff) {
+          minDiff = diff;
+          activeIndex = index;
+        }
+      }
+    });
+    
+    return activeIndex;
+  };
+  
+  const activeIndex = findActiveTimestamp();
+
+  // タイムスタンプをビデオタイトルでグループ化
+  const groupedByTitle: { [title: string]: TimestampItem[] } = {};
+  timestamps.forEach(timestamp => {
+    const title = timestamp.videoTitle || '不明な動画';
+    if (!groupedByTitle[title]) {
+      groupedByTitle[title] = [];
+    }
+    groupedByTitle[title].push(timestamp);
+  });
+
+  // タイムスタンプがない場合は、デフォルトのタイムスタンプを作成
+  if (timestamps.length === 0) {
+    return (
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ 
+              height: height !== "auto" ? height : "auto",
+              opacity: 1
+            }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden bg-card dark:bg-card/90"
+          >
+            <div ref={contentRef} className="p-2">
+              <div className="p-4 text-center text-muted-foreground">
+                タイムスタンプがありません
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    );
+  }
 
   return (
-    <div className="youtube-timestamp bg-gray-100 rounded overflow-hidden">
-      {/* タイムスタンプリスト（アニメーション付き開閉） */}
-      <div 
-        ref={contentRef}
-        className="transition-all duration-500 ease-in-out overflow-hidden"
-        style={{ 
-          maxHeight: isOpen ? (contentHeight ? `${contentHeight}px` : '250px') : '0',
-          opacity: isOpen ? 1 : 0,
-          visibility: isOpen ? 'visible' : 'hidden',
-          transform: isOpen ? 'translateY(0)' : 'translateY(-10px)',
-          transformOrigin: 'top'
-        }}
-      >
-        <div className="p-3 max-h-[250px] overflow-y-auto custom-scrollbar">
-          <ul className="space-y-1">
-            {timestamps.map((item, index) => (
-              <TimestampItemComponent
-                key={index}
-                timestamp={item}
-                isActive={currentTime >= item.time}
-                onClick={onTimestampClick}
-              />
-            ))}
-          </ul>
-        </div>
-      </div>
-    </div>
+    <AnimatePresence initial={false}>
+      {isOpen && (
+        <motion.div
+          initial={{ height: 0, opacity: 0 }}
+          animate={{ 
+            height: height !== "auto" ? height : "auto",
+            opacity: 1
+          }}
+          exit={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.3, ease: "easeInOut" }}
+          className="overflow-hidden bg-card dark:bg-card/90"
+        >
+          <div ref={contentRef} className="p-2">
+            <div className="timestamp-list divide-y divide-border">
+              {Object.entries(groupedByTitle).map(([title, items]) => (
+                <div key={title} className="py-2">
+                  <h3 className="text-sm font-medium px-2 py-1 bg-muted/10 rounded mb-1">{title}</h3>
+                  <ul>
+                    {items.map((timestamp, index) => (
+                      <TimestampItemComponent
+                        key={`${timestamp.time}-${timestamp.label || "タイムスタンプ"}-${index}`}
+                        timestamp={{
+                          ...timestamp,
+                          label: timestamp.label || "タイムスタンプ"
+                        }}
+                        isActive={timestamps.indexOf(timestamp) === activeIndex}
+                        onClick={onTimestampClick}
+                      />
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
   );
 };
 
