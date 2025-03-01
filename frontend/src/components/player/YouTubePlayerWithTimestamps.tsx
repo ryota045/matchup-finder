@@ -11,11 +11,13 @@ import { MatchupVideo } from '../playlist/VideoItem';
  * @property {MatchupVideo[]} [videos=[]] - 関連動画のリスト（検索結果で絞られた状態）
  * @property {MatchupVideo[]} [allVideos=[]] - 全ての動画リスト（検索結果で絞られる前）
  * @property {string} [selectedCharacter] - 選択されたキャラクター名（英語）
+ * @property {string[]} [selectedOpponentCharacters=[]] - 選択された対戦キャラクター名の配列（英語）
  */
 interface YouTubePlayerWithTimestampsProps {
   videos?: MatchupVideo[];
   allVideos?: MatchupVideo[]; // 検索結果で絞られる前の全ての動画リスト
   selectedCharacter?: string;
+  selectedOpponentCharacters?: string[];
 }
 
 /**
@@ -43,6 +45,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   videos = [],
   allVideos = [], // 検索結果で絞られる前の全ての動画リスト
   selectedCharacter,
+  selectedOpponentCharacters = [],
 }) => {
   const [currentUrl, setCurrentUrl] = useState('');
   const [currentTime, setCurrentTime] = useState(0);
@@ -54,6 +57,9 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   
   // プレーヤーの高さを参照するためのref
   const playerContainerRef = useRef<HTMLDivElement>(null);
+
+  // 使用キャラクターと対戦キャラクターの両方が選択されているかチェック
+  const hasRequiredCharacters = !!selectedCharacter && selectedOpponentCharacters.length > 0;
 
   // プレイリストの開閉を制御する関数
   const handlePlaylistToggle = (isOpen: boolean) => {
@@ -75,16 +81,16 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
 
   // キャラクターが選択されたときにプレイリストを開く
   useEffect(() => {
-    if (selectedCharacter) {
+    if (hasRequiredCharacters) {
       setIsPlaylistOpen(true);
       setIsTimestampOpen(false);
     }
-  }, [selectedCharacter]);
+  }, [selectedCharacter, selectedOpponentCharacters, hasRequiredCharacters]);
 
   // コンポーネントのマウント時に初期動画を設定
   useEffect(() => {
-    // キャラクターが選択されていない場合は何もしない
-    if (!selectedCharacter) {
+    // 必要なキャラクターが選択されていない場合は何もしない
+    if (!hasRequiredCharacters) {
       setCurrentUrl('');
       setCurrentVideo(null);
       return;
@@ -94,7 +100,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
     // ユーザーがプレイリストから選択するまで待機
     setCurrentUrl('');
     setCurrentVideo(null);
-  }, [videos, allVideos, selectedCharacter]);
+  }, [videos, allVideos, hasRequiredCharacters]);
 
   // URLが変更されたときに対応する動画情報を更新
   useEffect(() => {
@@ -163,9 +169,11 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
           <h3 className="text-lg font-semibold truncate mr-2">
             {!selectedCharacter 
               ? 'キャラクターを選択してください'
-              : isVideoSelected 
-                ? (currentVideo?.title || 'タイトルなし')
-                : 'プレイリストから動画を選択してください'}
+              : !selectedOpponentCharacters.length
+                ? '対戦キャラクターを選択してください'
+                : isVideoSelected 
+                  ? (currentVideo?.title || 'タイトルなし')
+                  : 'プレイリストから動画を選択してください'}
           </h3>
           {isVideoSelected && currentVideo?.directory && (
             <span className="text-sm bg-muted/30 dark:bg-muted/10 px-2 py-1 rounded whitespace-nowrap">
@@ -189,6 +197,15 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
                   <p className="text-muted-foreground">
                     上部のキャラクターセレクターから使用キャラクターを選択すると、
                     対応する動画が表示されます。
+                  </p>
+                </div>
+              ) : !selectedOpponentCharacters.length ? (
+                <div className="text-center p-8">
+                  <div className="text-4xl mb-4">🆚</div>
+                  <h3 className="text-xl font-semibold mb-2">対戦キャラクターを選択してください</h3>
+                  <p className="text-muted-foreground">
+                    上部のキャラクターセレクターから対戦キャラクターを1体以上選択すると、
+                    マッチアップ動画が表示されます。
                   </p>
                 </div>
               ) : isVideoSelected ? (
@@ -216,8 +233,8 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
         <YouTubeTimestamp 
           onTimestampClick={handleTimestampClick}
           currentTime={currentTime}
-          videos={selectedCharacter ? videos : []}
-          allVideos={selectedCharacter ? allVideos : []} // 全ての動画リストを渡す
+          videos={hasRequiredCharacters ? videos : []}
+          allVideos={hasRequiredCharacters ? allVideos : []} // 全ての動画リストを渡す
           onVideoSelect={handleVideoSelect}
           url={currentUrl}
           isOpen={isTimestampOpen}

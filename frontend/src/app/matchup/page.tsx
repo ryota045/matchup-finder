@@ -40,11 +40,11 @@ export default function MatchupPage() {
         const response = await fetch('/api/matchup');
         const data = await response.json();
 
-        console.log("fetchData:",data);
+        // console.log("fetchData:",data);
 
         if (data.success) {
           setMatchupLists(data.data);
-          console.log('マッチアップリスト取得成功:', data.data);
+          // console.log('マッチアップリスト取得成功:', data.data);
         } else {
           setError(data.error || 'マッチアップリストの取得に失敗しました');
         }
@@ -65,7 +65,7 @@ export default function MatchupPage() {
 
     // 注意: selectedCharacterとselectedCharactersはすでにanotation値になっています
     // CharacterSelectorコンポーネントで変換されています
-    console.log('キャラクター選択変更:', { 使用キャラクター: selectedCharacter, 対戦キャラクター: selectedCharacters });
+    // console.log('キャラクター選択変更:', { 使用キャラクター: selectedCharacter, 対戦キャラクター: selectedCharacters });
     
     const videos: MatchupVideo[] = [];
     
@@ -73,7 +73,7 @@ export default function MatchupPage() {
     const hasUserCharacter = !!selectedCharacter;
     const hasOpponentCharacters = selectedCharacters.length > 0;
     
-    console.log('検索条件:', { 使用キャラクター検索: hasUserCharacter, 対戦キャラクター検索: hasOpponentCharacters });
+    // console.log('検索条件:', { 使用キャラクター検索: hasUserCharacter, 対戦キャラクター検索: hasOpponentCharacters });
     
     // キャラクターの組み合わせごとにタイムスタンプをまとめるためのマップ
     const matchupMap: { [key: string]: { 
@@ -88,7 +88,7 @@ export default function MatchupPage() {
     
     matchupLists.forEach(item => {
       const matchupData = item.content;
-      console.log(`ディレクトリ ${item.directory} のデータ:`, matchupData);
+      // console.log(`ディレクトリ ${item.directory} のデータ:`, matchupData);
       
       // マッチアップデータの形式に合わせて処理
       if (matchupData && typeof matchupData === 'object') {
@@ -463,7 +463,7 @@ export default function MatchupPage() {
     // マップから配列に変換
     const combinedVideos = Object.values(matchupMap);
     
-    console.log('検索結果（組み合わせ後）:', combinedVideos.length, '件の動画が見つかりました');
+    // console.log('検索結果（組み合わせ後）:', combinedVideos.length, '件の動画が見つかりました');
     
     // 動画をソート（ディレクトリ名でソート）
     combinedVideos.sort((a, b) => a.directory.localeCompare(b.directory));
@@ -605,135 +605,123 @@ export default function MatchupPage() {
               <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
                 <p>選択したキャラクターのマッチアップ動画が見つかりませんでした。</p>
               </div>
-            ) 
-            : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* 動画プレーヤー部分 */}
-                <div className="lg:col-span-3">
-                  {selectedVideoIndex >= 0 && matchupVideos[selectedVideoIndex] && (
-                    // <div className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border border-border dark:border-gray-800 p-4">
-                    //   <div className="flex items-center justify-between mb-4">
-                    //     <h3 className="text-lg font-semibold">{matchupVideos[selectedVideoIndex].matchupKey}</h3>
-                    //     <span className="text-sm bg-muted/30 dark:bg-muted/10 px-2 py-1 rounded">
-                    //       {matchupVideos[selectedVideoIndex].directory}
-                    //     </span>
-                    //   </div>
-                      
-                      <YouTubePlayerWithTimestamps                                     
-                        videos={matchupVideos}
-                        allVideos={matchupLists.flatMap(item => {
-                          const videos: MatchupVideo[] = [];
-                          // matchupsプロパティがある場合の処理
-                          if (item.content && item.content.matchups) {
-                            Object.entries(item.content.matchups).forEach(([key, value]: [string, any]) => {
-                              if (value.url) {
-                                const timestamps: TimestampItem[] = [];
-                                if (value.timestamps) {
-                                  Object.entries(value.timestamps).forEach(([time, data]: [string, any]) => {
-                                    if (typeof data === 'object' && data !== null) {
-                                      let timeInSeconds = 0;
-                                      let originalDetectTime = "";
-                                      
-                                      if (data.detect_time) {
-                                        const timeStr = String(data.detect_time);
-                                        originalDetectTime = timeStr;
-                                        
-                                        if (timeStr.includes(':')) {
-                                          const parts = timeStr.split(':').map(Number);
-                                          if (parts.length === 3) {
-                                            timeInSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-                                          } else if (parts.length === 2) {
-                                            timeInSeconds = parts[0] * 60 + parts[1];
-                                          }
-                                        } else {
-                                          timeInSeconds = parseInt(timeStr, 10);
-                                        }
-                                      } else {
-                                        timeInSeconds = parseInt(time, 10);
-                                      }
-
-                                      timestamps.push({
-                                        time: timeInSeconds,
-                                        label: data.video_title || data.label || String(data),
-                                        videoTitle: data.video_title || value.video_title || key,
-                                        originalDetectTime: originalDetectTime
-                                      });
-                                    } else {
-                                      timestamps.push({
-                                        time: parseInt(time, 10),
-                                        label: value.video_title || String(data),
-                                        videoTitle: value.video_title || key,
-                                        originalDetectTime: time
-                                      });
-                                    }
-                                  });
-                                }
-                                
-                                videos.push({
-                                  url: value.url,
-                                  title: value.video_title || key,
-                                  timestamps: timestamps,
-                                  matchupKey: key,
-                                  directory: item.directory,
-                                  chara1: value.chara1 || '',
-                                  chara2: value.chara2 || ''
-                                });
-                              }
-                            });
-                          }
-                          // matchupsプロパティがない場合、直接オブジェクトをチェック
-                          else if (item.content && typeof item.content === 'object') {
-                            Object.entries(item.content).forEach(([key, value]: [string, any]) => {
-                              if (typeof value === 'object' && value !== null && value.url) {
-                                const timestamps: TimestampItem[] = [];
-                                
-                                // タイムスタンプがある場合は追加
-                                if (value.detect_time) {
+            ) : (
+              <div className="grid grid-cols-1 gap-4 mt-4">
+                <div className="col-span-1">
+                  <YouTubePlayerWithTimestamps 
+                    videos={matchupVideos} 
+                    allVideos={matchupLists.flatMap(item => {
+                      const videos: MatchupVideo[] = [];
+                      // matchupsプロパティがある場合の処理
+                      if (item.content && item.content.matchups) {
+                        Object.entries(item.content.matchups).forEach(([key, value]: [string, any]) => {
+                          if (value.url) {
+                            const timestamps: TimestampItem[] = [];
+                            if (value.timestamps) {
+                              Object.entries(value.timestamps).forEach(([time, data]: [string, any]) => {
+                                if (typeof data === 'object' && data !== null) {
                                   let timeInSeconds = 0;
                                   let originalDetectTime = "";
                                   
-                                  const timeStr = String(value.detect_time);
-                                  originalDetectTime = timeStr;
-                                  
-                                  if (timeStr.includes(':')) {
-                                    const parts = timeStr.split(':').map(Number);
-                                    if (parts.length === 3) {
-                                      timeInSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
-                                    } else if (parts.length === 2) {
-                                      timeInSeconds = parts[0] * 60 + parts[1];
+                                  if (data.detect_time) {
+                                    const timeStr = String(data.detect_time);
+                                    originalDetectTime = timeStr;
+                                    
+                                    if (timeStr.includes(':')) {
+                                      const parts = timeStr.split(':').map(Number);
+                                      if (parts.length === 3) {
+                                        timeInSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+                                      } else if (parts.length === 2) {
+                                        timeInSeconds = parts[0] * 60 + parts[1];
+                                      }
+                                    } else {
+                                      timeInSeconds = parseInt(timeStr, 10);
                                     }
                                   } else {
-                                    timeInSeconds = parseInt(timeStr, 10);
+                                    timeInSeconds = parseInt(time, 10);
                                   }
-                                  
+
                                   timestamps.push({
                                     time: timeInSeconds,
-                                    label: value.video_title || key,
-                                    videoTitle: value.video_title || key,
+                                    label: data.video_title || data.label || String(data),
+                                    videoTitle: data.video_title || value.video_title || key,
                                     originalDetectTime: originalDetectTime
                                   });
+                                } else {
+                                  timestamps.push({
+                                    time: parseInt(time, 10),
+                                    label: value.video_title || String(data),
+                                    videoTitle: value.video_title || key,
+                                    originalDetectTime: time
+                                  });
                                 }
-                                
-                                videos.push({
-                                  url: value.url,
-                                  title: value.video_title || key,
-                                  timestamps: timestamps,
-                                  matchupKey: key,
-                                  directory: item.directory,
-                                  chara1: value.chara1 || '',
-                                  chara2: value.chara2 || ''
-                                });
-                              }
+                              });
+                            }
+                            
+                            videos.push({
+                              url: value.url,
+                              title: value.video_title || key,
+                              timestamps: timestamps,
+                              matchupKey: key,
+                              directory: item.directory,
+                              chara1: value.chara1 || '',
+                              chara2: value.chara2 || ''
                             });
                           }
-                          
-                          console.log(`ディレクトリ ${item.directory} から ${videos.length} 件の動画を抽出しました`);
-                          return videos;
-                        })}
-                        selectedCharacter={selectedCharacter}
-                      />
-                    // </div>
-                  )}
+                        });
+                      }
+                      // matchupsプロパティがない場合、直接オブジェクトをチェック
+                      else if (item.content && typeof item.content === 'object') {
+                        Object.entries(item.content).forEach(([key, value]: [string, any]) => {
+                          if (typeof value === 'object' && value !== null && value.url) {
+                            const timestamps: TimestampItem[] = [];
+                            
+                            // タイムスタンプがある場合は追加
+                            if (value.detect_time) {
+                              let timeInSeconds = 0;
+                              let originalDetectTime = "";
+                              
+                              const timeStr = String(value.detect_time);
+                              originalDetectTime = timeStr;
+                              
+                              if (timeStr.includes(':')) {
+                                const parts = timeStr.split(':').map(Number);
+                                if (parts.length === 3) {
+                                  timeInSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+                                } else if (parts.length === 2) {
+                                  timeInSeconds = parts[0] * 60 + parts[1];
+                                }
+                              } else {
+                                timeInSeconds = parseInt(timeStr, 10);
+                              }
+                              
+                              timestamps.push({
+                                time: timeInSeconds,
+                                label: value.video_title || key,
+                                videoTitle: value.video_title || key,
+                                originalDetectTime: originalDetectTime
+                              });
+                            }
+                            
+                            videos.push({
+                              url: value.url,
+                              title: value.video_title || key,
+                              timestamps: timestamps,
+                              matchupKey: key,
+                              directory: item.directory,
+                              chara1: value.chara1 || '',
+                              chara2: value.chara2 || ''
+                            });
+                          }
+                        });
+                      }
+                      
+                      // console.log(`ディレクトリ ${item.directory} から ${videos.length} 件の動画を抽出しました`);
+                      return videos;
+                    })}
+                    selectedCharacter={selectedCharacter}
+                    selectedOpponentCharacters={selectedCharacters}
+                  />
                 </div>
               </div>
             )}
