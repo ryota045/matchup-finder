@@ -1,9 +1,9 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import CharacterSelector from '../../components/CharacterSelector';
-import YouTubePlayerWithTimestamps from '../../components/YouTubePlayerWithTimestamps';
-import { TimestampItem } from '../../components/YouTubeTimestamp';
+import CharacterSelector from '../../components/character/CharacterSelector';
+import YouTubePlayerWithTimestamps from '../../components/player/YouTubePlayerWithTimestamps';
+import { TimestampItem } from '../../components/timestamp/TimestampItem';
 import { characterIcons } from '../../data/characterData';
 
 interface MatchupItem {

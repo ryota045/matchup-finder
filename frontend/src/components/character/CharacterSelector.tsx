@@ -8,7 +8,7 @@ import {
   getJapaneseName, 
   filterCharacterIcons,
   characterIcons
-} from '../data/characterData';
+} from '../../data/characterData';
 
 interface CharacterSelectorProps {
   onSingleCharacterSelect?: (character: string) => void;

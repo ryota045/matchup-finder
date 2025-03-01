@@ -1,7 +1,22 @@
 import React, { useState, useEffect } from 'react';
 import YouTubePlayer from './YouTubePlayer';
-import YouTubeTimestamp, { TimestampItem, MatchupVideo } from './YouTubeTimestamp';
+import YouTubeTimestamp from '../timestamp/YouTubeTimestamp';
+import { extractVideoId } from '../utils/YouTubeUtils';
+import { TimestampItem } from '../timestamp/TimestampItem';
+import { MatchupVideo } from '../playlist/VideoItem';
 
+/**
+ * YouTubeプレーヤーとタイムスタンプを組み合わせたコンポーネントのプロパティ
+ * @interface YouTubePlayerWithTimestampsProps
+ * @property {string} url - YouTube動画のURL
+ * @property {TimestampItem[]} timestamps - タイムスタンプのリスト
+ * @property {number|string} [width='100%'] - プレーヤーの幅
+ * @property {number|string} [height='480'] - プレーヤーの高さ
+ * @property {boolean} [autoplay=false] - 自動再生するかどうか
+ * @property {MatchupVideo[]} [videos=[]] - 関連動画のリスト
+ * @property {number} [selectedVideoIndex=-1] - 選択されている動画のインデックス
+ * @property {function} [onVideoSelect] - 動画が選択されたときのコールバック関数
+ */
 interface YouTubePlayerWithTimestampsProps {
   url: string;
   timestamps: TimestampItem[];
@@ -13,6 +28,27 @@ interface YouTubePlayerWithTimestampsProps {
   onVideoSelect?: (index: number) => void;
 }
 
+/**
+ * YouTube動画プレーヤーとタイムスタンプリストを組み合わせたコンポーネント
+ * 
+ * タイムスタンプをクリックすると、動画の該当時間にジャンプします。
+ * 関連動画のリストも表示でき、動画を切り替えることができます。
+ * 
+ * @component
+ * @example
+ * ```tsx
+ * <YouTubePlayerWithTimestamps
+ *   url="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
+ *   timestamps={[
+ *     { time: 0, label: "イントロ" },
+ *     { time: 30, label: "サビ" }
+ *   ]}
+ *   videos={relatedVideos}
+ *   selectedVideoIndex={0}
+ *   onVideoSelect={handleVideoSelect}
+ * />
+ * ```
+ */
 const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = ({
   url,
   timestamps,
@@ -34,7 +70,10 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
     setCurrentTimestamps(timestamps);
   }, [url, timestamps]);
 
-  // タイムスタンプがクリックされたときの処理
+  /**
+   * タイムスタンプがクリックされたときの処理
+   * @param time クリックされたタイムスタンプの時間（秒）
+   */
   const handleTimestampClick = (time: number) => {
     // 現在のURLからビデオIDを抽出
     const videoId = extractVideoId(currentUrl);
@@ -46,20 +85,15 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
     setCurrentTime(time);
   };
 
-  // 動画が選択されたときの処理
+  /**
+   * 動画が選択されたときの処理
+   * @param index 選択された動画のインデックス
+   */
   const handleVideoSelect = (index: number) => {
     console.log('YouTubePlayerWithTimestamps: 動画選択ハンドラーが呼び出されました', index);
     if (onVideoSelect) {
       onVideoSelect(index);
     }
-  };
-
-  // YouTubeのURLからビデオIDを抽出する関数
-  const extractVideoId = (url: string): string | null => {
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    
-    return (match && match[2].length === 11) ? match[2] : null;
   };
 
   return (
