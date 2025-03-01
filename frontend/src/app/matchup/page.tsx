@@ -611,18 +611,15 @@ export default function MatchupPage() {
                 {/* 動画プレーヤー部分 */}
                 <div className="lg:col-span-3">
                   {selectedVideoIndex >= 0 && matchupVideos[selectedVideoIndex] && (
-                    <div className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border border-border dark:border-gray-800 p-4">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold">{matchupVideos[selectedVideoIndex].matchupKey}</h3>
-                        <span className="text-sm bg-muted/30 dark:bg-muted/10 px-2 py-1 rounded">
-                          {matchupVideos[selectedVideoIndex].directory}
-                        </span>
-                      </div>
+                    // <div className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border border-border dark:border-gray-800 p-4">
+                    //   <div className="flex items-center justify-between mb-4">
+                    //     <h3 className="text-lg font-semibold">{matchupVideos[selectedVideoIndex].matchupKey}</h3>
+                    //     <span className="text-sm bg-muted/30 dark:bg-muted/10 px-2 py-1 rounded">
+                    //       {matchupVideos[selectedVideoIndex].directory}
+                    //     </span>
+                    //   </div>
                       
-                      <YouTubePlayerWithTimestamps                        
-                        width="100%"
-                        height={600}
-                        autoplay={false}
+                      <YouTubePlayerWithTimestamps                                     
                         videos={matchupVideos}
                         allVideos={matchupLists.flatMap(item => {
                           const videos: MatchupVideo[] = [];
@@ -733,8 +730,9 @@ export default function MatchupPage() {
                           console.log(`ディレクトリ ${item.directory} から ${videos.length} 件の動画を抽出しました`);
                           return videos;
                         })}
+                        selectedCharacter={selectedCharacter}
                       />
-                    </div>
+                    // </div>
                   )}
                 </div>
               </div>
