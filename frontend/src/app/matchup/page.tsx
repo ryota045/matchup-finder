@@ -599,7 +599,7 @@ export default function MatchupPage() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">マッチアップ動画 ({matchupVideos.length}件)</h2>
+            <h2 className="text-xl font-semibold mb-4">検索結果 ({matchupVideos.length}件)</h2>
             
             {matchupVideos.length === 0 ? (
               <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
@@ -619,19 +619,120 @@ export default function MatchupPage() {
                         </span>
                       </div>
                       
-                      <YouTubePlayerWithTimestamps
-                        key={`video-${selectedVideoIndex}-${matchupVideos[selectedVideoIndex].url}`}
-                        url={matchupVideos[selectedVideoIndex].url}
-                        timestamps={matchupVideos[selectedVideoIndex].timestamps}
+                      <YouTubePlayerWithTimestamps                        
                         width="100%"
                         height={600}
                         autoplay={false}
                         videos={matchupVideos}
-                        selectedVideoIndex={selectedVideoIndex}
-                        onVideoSelect={(index) => {
-                          // console.log(`動画選択: インデックス ${index} を選択`);
-                          setSelectedVideoIndex(index);
-                        }}
+                        allVideos={matchupLists.flatMap(item => {
+                          const videos: MatchupVideo[] = [];
+                          // matchupsプロパティがある場合の処理
+                          if (item.content && item.content.matchups) {
+                            Object.entries(item.content.matchups).forEach(([key, value]: [string, any]) => {
+                              if (value.url) {
+                                const timestamps: TimestampItem[] = [];
+                                if (value.timestamps) {
+                                  Object.entries(value.timestamps).forEach(([time, data]: [string, any]) => {
+                                    if (typeof data === 'object' && data !== null) {
+                                      let timeInSeconds = 0;
+                                      let originalDetectTime = "";
+                                      
+                                      if (data.detect_time) {
+                                        const timeStr = String(data.detect_time);
+                                        originalDetectTime = timeStr;
+                                        
+                                        if (timeStr.includes(':')) {
+                                          const parts = timeStr.split(':').map(Number);
+                                          if (parts.length === 3) {
+                                            timeInSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+                                          } else if (parts.length === 2) {
+                                            timeInSeconds = parts[0] * 60 + parts[1];
+                                          }
+                                        } else {
+                                          timeInSeconds = parseInt(timeStr, 10);
+                                        }
+                                      } else {
+                                        timeInSeconds = parseInt(time, 10);
+                                      }
+
+                                      timestamps.push({
+                                        time: timeInSeconds,
+                                        label: data.video_title || data.label || String(data),
+                                        videoTitle: data.video_title || value.video_title || key,
+                                        originalDetectTime: originalDetectTime
+                                      });
+                                    } else {
+                                      timestamps.push({
+                                        time: parseInt(time, 10),
+                                        label: value.video_title || String(data),
+                                        videoTitle: value.video_title || key,
+                                        originalDetectTime: time
+                                      });
+                                    }
+                                  });
+                                }
+                                
+                                videos.push({
+                                  url: value.url,
+                                  title: value.video_title || key,
+                                  timestamps: timestamps,
+                                  matchupKey: key,
+                                  directory: item.directory,
+                                  chara1: value.chara1 || '',
+                                  chara2: value.chara2 || ''
+                                });
+                              }
+                            });
+                          }
+                          // matchupsプロパティがない場合、直接オブジェクトをチェック
+                          else if (item.content && typeof item.content === 'object') {
+                            Object.entries(item.content).forEach(([key, value]: [string, any]) => {
+                              if (typeof value === 'object' && value !== null && value.url) {
+                                const timestamps: TimestampItem[] = [];
+                                
+                                // タイムスタンプがある場合は追加
+                                if (value.detect_time) {
+                                  let timeInSeconds = 0;
+                                  let originalDetectTime = "";
+                                  
+                                  const timeStr = String(value.detect_time);
+                                  originalDetectTime = timeStr;
+                                  
+                                  if (timeStr.includes(':')) {
+                                    const parts = timeStr.split(':').map(Number);
+                                    if (parts.length === 3) {
+                                      timeInSeconds = parts[0] * 3600 + parts[1] * 60 + parts[2];
+                                    } else if (parts.length === 2) {
+                                      timeInSeconds = parts[0] * 60 + parts[1];
+                                    }
+                                  } else {
+                                    timeInSeconds = parseInt(timeStr, 10);
+                                  }
+                                  
+                                  timestamps.push({
+                                    time: timeInSeconds,
+                                    label: value.video_title || key,
+                                    videoTitle: value.video_title || key,
+                                    originalDetectTime: originalDetectTime
+                                  });
+                                }
+                                
+                                videos.push({
+                                  url: value.url,
+                                  title: value.video_title || key,
+                                  timestamps: timestamps,
+                                  matchupKey: key,
+                                  directory: item.directory,
+                                  chara1: value.chara1 || '',
+                                  chara2: value.chara2 || ''
+                                });
+                              }
+                            });
+                          }
+                          
+                          console.log(`ディレクトリ ${item.directory} から ${videos.length} 件の動画を抽出しました`);
+                          return videos;
+                        })}
                       />
                     </div>
                   )}

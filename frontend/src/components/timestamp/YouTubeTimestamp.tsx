@@ -11,20 +11,21 @@ import CharacterIconPair, { CharacterIcon } from '../playlist/CharacterIconPair'
 /**
  * YouTubeタイムスタンプコンポーネントのプロパティ
  * @interface YouTubeTimestampProps
- * @property {TimestampItem[]} timestamps - タイムスタンプのリスト
  * @property {(time: number) => void} onTimestampClick - タイムスタンプがクリックされたときのコールバック関数
  * @property {number} [currentTime=0] - 現在の再生時間（秒）
- * @property {MatchupVideo[]} [videos=[]] - 関連動画のリスト
+ * @property {MatchupVideo[]} [videos=[]] - 関連動画のリスト（検索結果で絞られた状態）
+ * @property {MatchupVideo[]} [allVideos=[]] - 全ての動画リスト（検索結果で絞られる前）
  * @property {(videoIndex: number) => void} [onVideoSelect] - 動画が選択されたときのコールバック関数
  * @property {number} [selectedVideoIndex=-1] - 選択されている動画のインデックス
  */
 interface YouTubeTimestampProps {
-  timestamps: TimestampItem[];
+  // timestamps: TimestampItem[];
   onTimestampClick: (time: number) => void;
   currentTime?: number;
   videos?: MatchupVideo[];
-  onVideoSelect?: (videoIndex: number) => void;
-  selectedVideoIndex?: number;
+  allVideos?: MatchupVideo[]; // 検索結果で絞られる前の全ての動画リスト
+  onVideoSelect?: (url: string) => void;
+  url?: string;
 }
 
 /**
@@ -47,13 +48,17 @@ interface YouTubeTimestampProps {
  * ```
  */
 const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
-  timestamps,
   onTimestampClick,
   currentTime = 0,
   videos = [],
+  allVideos = [], // 検索結果で絞られる前の全ての動画リスト
   onVideoSelect,
-  selectedVideoIndex = -1,
+  url,
 }) => {
+  // console.log("allVideos", allVideos);
+  // console.log("videos", videos);
+  // console.log("selectedVideoIndex", selectedVideoIndex);
+  // console.log("currentTime", currentTime);
   // アコーディオンの開閉状態を管理
   const [isOpen, setIsOpen] = useState(true);
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(true);
@@ -113,40 +118,78 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
     setExpandedGroups(initialExpandedState);
   }, [videos]);
 
-  // 現在選択されている動画のタイトルと一致するすべてのタイムスタンプを収集
+  // 現在選択されている動画のURLと同じURLを持つすべてのマッチアップのタイムスタンプを収集
   useEffect(() => {
-    if (selectedVideoIndex >= 0 && selectedVideoIndex < videos.length) {
-      const currentVideo = videos[selectedVideoIndex];
-      const currentTitle = currentVideo.title;
+    // if (selectedVideoIndex >= 0 && selectedVideoIndex < videos.length) {
+      // const currentVideo = videos[selectedVideoIndex];
+      // console.log("現在選択されている動画:", currentVideo.title, currentVideo.directory, currentVideo.url);
       
-      // すべての動画からタイトルが一致するタイムスタンプを収集
+    if(url) {
+      // URLからタイムスタンプ部分を除去する関数
+      const removeTimestampFromUrl = (url: string): string => {
+        // URLからタイムスタンプパラメータ（&t=〇〇s）を除去
+        return url.replace(/[&?]t=\d+s?/, '');
+      };
+      
+      const currentUrl = removeTimestampFromUrl(url);
+
+      console.log("currentUrl:", currentUrl);
+      
+      // すべての動画からURLが一致するタイムスタンプを収集
       const matchingTimestamps: TimestampItem[] = [];
+
+      console.log("allVideos length:", allVideos?.length || 0);
       
-      videos.forEach(video => {
-        // 動画のタイトルが一致するタイムスタンプを追加
-        video.timestamps.forEach(timestamp => {
-          if (timestamp.videoTitle === currentTitle) {
+      // 検索結果で絞られる前の全ての動画から検索
+      const videosToSearch = allVideos && allVideos.length > 0 ? allVideos : videos;
+      
+      console.log("videosToSearch length:", videosToSearch.length);
+      console.log("currentUrl:", currentUrl);
+      
+      // まず、現在選択されている動画と完全に一致する動画のタイムスタンプを追加
+      videosToSearch.forEach(video => {
+        // 動画のURLからタイムスタンプを除去して比較
+        const videoUrl = removeTimestampFromUrl(video.url);
+        
+        // URLが一致し、かつタイトルとディレクトリも一致する場合のみタイムスタンプを追加
+        if (videoUrl === currentUrl) {
+          console.log("完全一致 (URL, タイトル, ディレクトリ):", video.title, video.directory, videoUrl);
+          
+          video.timestamps.forEach(timestamp => {
             // 元の動画情報を保持するために新しいプロパティを追加
+            // sourceVideoIndexは検索結果の配列（videos）内でのインデックスを計算
+            const sourceVideoIndex = videos.findIndex(v => {
+              // URLからタイムスタンプを除去して比較
+              const vUrl = removeTimestampFromUrl(v.url);
+              // URLとタイトルとディレクトリが一致する動画を探す
+              return vUrl === videoUrl && v.title === video.title && v.directory === video.directory;
+            });
+            
+            console.log(`タイムスタンプ追加: ${timestamp.time}秒, 動画: ${video.title}, インデックス: ${sourceVideoIndex}`);
+            
             matchingTimestamps.push({
               ...timestamp,
               sourceVideo: video.title,
-              sourceVideoIndex: videos.indexOf(video),
+              sourceVideoIndex: sourceVideoIndex, // 検索結果内での対応するインデックス
               // キャラクター情報も追加
               chara1: video.chara1,
               chara2: video.chara2
             });
-          }
-        });
+          });
+        } else if (videoUrl === currentUrl) {
+          console.log("URLは一致するが、タイトルまたはディレクトリが異なる:", video.title, video.directory);
+        }
       });
       
       // タイムスタンプをtimeの値が小さい順に並べ替え
       matchingTimestamps.sort((a, b) => a.time - b.time);
       
       setAllMatchingTimestamps(matchingTimestamps);
-    } else {
-      setAllMatchingTimestamps([]);
-    }
-  }, [selectedVideoIndex, videos]);
+    } 
+    // else {
+    //   setAllMatchingTimestamps([]);
+    // }
+  }, [videos, allVideos, url]);
 
   // コンテンツの高さを計算
   useEffect(() => {
@@ -243,18 +286,37 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
    * @param time タイムスタンプの時間
    * @param sourceVideoIndex 元の動画のインデックス（オプション）
    */
-  const handleRelatedTimestampClick = (time: number, sourceVideoIndex?: number) => {
-    // 別の動画のタイムスタンプがクリックされた場合、その動画に切り替える
-    if (sourceVideoIndex !== undefined && sourceVideoIndex !== selectedVideoIndex && onVideoSelect) {
-      onVideoSelect(sourceVideoIndex);
-      // 少し遅延させてから時間を設定（動画の読み込みを待つ）
-      setTimeout(() => {
-        onTimestampClick(time);
-      }, 500);
-    } else {
-      // 同じ動画内のタイムスタンプの場合は通常通り処理
-      onTimestampClick(time);
-    }
+  const handleRelatedTimestampClick = (time: number) => {
+    // console.log('タイムスタンプクリック:', { time, selectedVideoIndex });
+
+    onTimestampClick(time);
+    
+    // // sourceVideoIndexが有効な値（0以上）で、現在選択されている動画と異なる場合のみ動画を切り替える
+    // if (sourceVideoIndex !== undefined && sourceVideoIndex >= 0 && sourceVideoIndex !== selectedVideoIndex && onVideoSelect) {
+    //   console.log('動画切り替え:', sourceVideoIndex);
+      
+    //   // 動画を切り替える前に、選択しようとしている動画が実際に存在するか確認
+    //   if (sourceVideoIndex < videos.length) {
+    //     const targetVideo = videos[sourceVideoIndex];
+    //     console.log('切り替え先の動画:', targetVideo.title, targetVideo.directory, targetVideo.url);
+        
+    //     // 動画を切り替え
+    //     // onVideoSelect(sourceVideoIndex);
+        
+    //     // 少し遅延させてから時間を設定（動画の読み込みを待つ）
+    //     setTimeout(() => {
+    //       onTimestampClick(time);
+    //     }, 500);
+    //   } else {
+    //     console.error('無効な動画インデックス:', sourceVideoIndex, '利用可能な動画数:', videos.length);
+    //     // 無効なインデックスの場合は、現在の動画内でタイムスタンプジャンプ
+    //     onTimestampClick(time);
+    //   }
+    // } else {
+    //   // 同じ動画内のタイムスタンプの場合、または無効なインデックスの場合は通常通り処理
+    //   console.log('同じ動画内のタイムスタンプ再生:', time);
+    //   onTimestampClick(time);
+    // }
   };
 
   /**
@@ -285,7 +347,6 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
           isOpen={isPlaylistOpen}
           toggleDirectoryAccordion={toggleDirectoryAccordion}
           toggleAccordion={toggleAccordion}
-          selectedVideoIndex={selectedVideoIndex}
           onVideoSelect={onVideoSelect || (() => {})}
           getCharacterGroupedVideos={getCharacterGroupedVideos}
           setIsOpen={setIsPlaylistOpen}
@@ -299,53 +360,48 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
             isOpen={isOpen}
             onClick={() => setIsOpen(!isOpen)}
           />
-          <AnimatePresence initial={false}>
-            {isOpen && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ 
-                  height: matchingTimestampsHeight !== "auto" ? matchingTimestampsHeight : "auto",
-                  opacity: 1
-                }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.3, ease: "easeInOut" }}
-                className="overflow-hidden"
-              >
-                <div 
-                  ref={matchingTimestampsRef} 
-                  className="timestamp-list-container"
-                >
-                  <div className="p-2 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                    {allMatchingTimestamps.map((timestamp, index) => (
-                      <div 
-                        key={`related-timestamp-${index}`}
-                        className={`
-                          p-2 rounded cursor-pointer hover:bg-accent/10
-                          ${timestamp.time === currentTime ? 'bg-primary/10 dark:bg-primary/5 text-primary font-medium border-l-2 border-primary' : ''}
-                        `}
-                        onClick={() => handleRelatedTimestampClick(timestamp.time, timestamp.sourceVideoIndex)}
-                      >
-                        <div className="flex items-center">
-                          <span className="inline-block w-16 text-sm font-mono text-muted-foreground bg-muted/20 dark:bg-muted/10 rounded px-1 py-0.5 text-center">
-                            {timestamp.originalDetectTime || formatTime(timestamp.time)}
-                          </span>
-                          
-                          {/* キャラクターアイコンを表示 */}
-                          {timestamp.chara1 && timestamp.chara2 && (
-                            <div className="flex-shrink-0 ml-2">
-                              <CharacterIconPair 
-                                {...getCharacterIcons(timestamp.chara1, timestamp.chara2)} 
-                              />
-                            </div>
-                          )}                          
+          <motion.div
+            className="overflow-hidden"
+            animate={{ 
+              height: isOpen ? (matchingTimestampsHeight !== "auto" ? matchingTimestampsHeight : "auto") : 0,
+              opacity: isOpen ? 1 : 0
+            }}
+            initial={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+          >
+            <div 
+              ref={matchingTimestampsRef} 
+              className="timestamp-list-container bg-card dark:bg-card/95 border-t border-border dark:border-gray-800"
+            >
+              <div className="p-2 max-h-[300px] overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+                {allMatchingTimestamps.map((timestamp, index) => (
+                  <div 
+                    key={`related-timestamp-${index}`}
+                    className={`
+                      p-2 rounded cursor-pointer hover:bg-accent/10
+                      ${timestamp.time === currentTime ? 'bg-primary/10 dark:bg-primary/5 text-primary font-medium border-l-2 border-primary' : ''}
+                    `}
+                    onClick={() => handleRelatedTimestampClick(timestamp.time)}
+                  >
+                    <div className="flex items-center">
+                      <span className="inline-block w-16 text-sm font-mono text-muted-foreground bg-muted/20 dark:bg-muted/10 rounded px-1 py-0.5 text-center">
+                        {timestamp.originalDetectTime || formatTime(timestamp.time)}
+                      </span>
+                      
+                      {/* キャラクターアイコンを表示 */}
+                      {timestamp.chara1 && timestamp.chara2 && (
+                        <div className="flex-shrink-0 ml-2">
+                          <CharacterIconPair 
+                            {...getCharacterIcons(timestamp.chara1, timestamp.chara2)} 
+                          />
                         </div>
-                      </div>
-                    ))}
+                      )}                          
+                    </div>
                   </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                ))}
+              </div>
+            </div>
+          </motion.div>
         </div>
       )}
       
@@ -381,4 +437,4 @@ function formatTime(seconds: number): string {
   }
 }
 
-export default YouTubeTimestamp; 
+export default React.memo(YouTubeTimestamp); 

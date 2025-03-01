@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import DirectoryGroup from './DirectoryGroup';
 import { MatchupVideo } from './VideoItem';
 import { CharacterIcon } from './CharacterIconPair';
 import { AccordionHeader } from '../ui/Accordion';
+import { motion } from 'framer-motion';
 
 /**
  * プレイリストコンポーネントのプロパティ
@@ -27,8 +28,7 @@ interface PlaylistProps {
   isOpen: boolean;
   toggleDirectoryAccordion: (directory: string) => void;
   toggleAccordion: (directory: string, charKey: string) => void;
-  selectedVideoIndex: number;
-  onVideoSelect: (index: number) => void;
+  onVideoSelect: (url: string) => void;
   getCharacterGroupedVideos: (videos: MatchupVideo[]) => {[key: string]: {icon1: CharacterIcon | null, icon2: CharacterIcon | null, videos: MatchupVideo[]}};
   setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }
@@ -62,11 +62,77 @@ const Playlist: React.FC<PlaylistProps> = ({
   isOpen,
   toggleDirectoryAccordion,
   toggleAccordion,
-  selectedVideoIndex,
   onVideoSelect,
   getCharacterGroupedVideos,
   setIsOpen
 }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
+  const [isInitialRender, setIsInitialRender] = useState(true);
+
+  // 初回レンダリング後にフラグを更新
+  useEffect(() => {
+    if (isInitialRender) {
+      setIsInitialRender(false);
+    }
+  }, []);
+
+  // コンテンツの高さを再計算する関数
+  const updateContentHeight = () => {
+    if (contentRef.current && isOpen) {
+      // 最大高さを400pxに制限
+      const calculatedHeight = Math.min(contentRef.current.scrollHeight, 400);
+      setContentHeight(calculatedHeight);
+    }
+  };
+
+  // プレイリストが開かれたとき、またはディレクトリやグループの展開状態が変わったときに高さを更新
+  useEffect(() => {
+    updateContentHeight();
+  }, [isOpen, expandedDirectories, expandedGroups]);
+
+  // ResizeObserverを使用してコンテンツの高さ変更を監視
+  useEffect(() => {
+    if (!contentRef.current || !isOpen) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateContentHeight();
+    });
+
+    resizeObserver.observe(contentRef.current);
+
+    return () => {
+      if (contentRef.current) {
+        resizeObserver.unobserve(contentRef.current);
+      }
+    };
+  }, [isOpen]);
+
+  // 事前にコンテンツをレンダリングしておく
+  const renderDirectoryGroups = () => {
+    return Object.keys(groupedVideos).length > 0 ? (
+      <div className="divide-y divide-border dark:divide-gray-800">
+        {Object.keys(groupedVideos).map(directory => (
+          <DirectoryGroup
+            key={directory}
+            directory={directory}
+            videos={groupedVideos[directory]}
+            isExpanded={expandedDirectories[directory]}
+            toggleDirectoryAccordion={() => toggleDirectoryAccordion(directory)}
+            expandedGroups={expandedGroups}
+            toggleAccordion={toggleAccordion}
+            onVideoSelect={onVideoSelect}
+            getCharacterGroupedVideos={getCharacterGroupedVideos}
+          />
+        ))}
+      </div>
+    ) : (
+      <div className="p-4 text-center text-muted-foreground">
+        プレイリストが空です
+      </div>
+    );
+  };
+
   if (videos.length === 0) return null;
   
   return (
@@ -78,32 +144,25 @@ const Playlist: React.FC<PlaylistProps> = ({
           onClick={() => setIsOpen(!isOpen)}
         />
         
-        {isOpen && (
-          <div className="max-h-[400px] overflow-y-auto custom-scrollbar">
-            {Object.keys(groupedVideos).length > 0 ? (
-              <div className="divide-y divide-border dark:divide-gray-800">
-                {Object.keys(groupedVideos).map(directory => (
-                  <DirectoryGroup
-                    key={directory}
-                    directory={directory}
-                    videos={groupedVideos[directory]}
-                    isExpanded={expandedDirectories[directory]}
-                    toggleDirectoryAccordion={() => toggleDirectoryAccordion(directory)}
-                    expandedGroups={expandedGroups}
-                    toggleAccordion={toggleAccordion}
-                    selectedVideoIndex={selectedVideoIndex}
-                    onVideoSelect={onVideoSelect}
-                    getCharacterGroupedVideos={getCharacterGroupedVideos}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="p-4 text-center text-muted-foreground">
-                プレイリストが空です
-              </div>
-            )}
+        <motion.div
+          className={`overflow-hidden ${isInitialRender ? '' : 'transition-all duration-300 ease-in-out'}`}
+          animate={{ 
+            height: isOpen ? (typeof contentHeight === "number" ? contentHeight : 400) : 0,
+            opacity: isOpen ? 1 : 0
+          }}
+          initial={{ height: 0, opacity: 0 }}
+          transition={{ duration: 0.2, ease: "easeOut" }}
+          style={{
+            visibility: isOpen ? 'visible' : 'hidden'
+          }}
+        >
+          <div 
+            ref={contentRef}
+            className="max-h-[400px] overflow-y-auto custom-scrollbar bg-card dark:bg-card/95 border-t border-border dark:border-gray-800"
+          >
+            {renderDirectoryGroups()}
           </div>
-        )}
+        </motion.div>
       </div>
     </div>
   );

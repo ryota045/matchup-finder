@@ -123,10 +123,10 @@ export default function YouTubeExamplePage() {
           右側のタイムスタンプをクリックすると、その時間から自動的に再生が始まります。
           「タイムスタンプ」のヘッダー部分をクリックすると、スムーズなアニメーションでアコーディオンが開閉します。
         </p>
-        <YouTubePlayerWithTimestamps 
+        {/* <YouTubePlayerWithTimestamps 
           url="https://www.youtube.com/watch?v=dQw4w9WgXcQ" 
           timestamps={sampleTimestamps}
-        />
+        /> */}
       </div>
       
       <div className="mt-8 p-4 bg-muted/20 dark:bg-muted/5 rounded border border-border dark:border-gray-800">
