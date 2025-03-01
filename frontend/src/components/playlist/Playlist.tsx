@@ -1,9 +1,8 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { RefObject } from 'react';
 import DirectoryGroup from './DirectoryGroup';
 import { MatchupVideo } from './VideoItem';
 import { CharacterIcon } from './CharacterIconPair';
-import { AccordionHeader } from '../ui/Accordion';
-import { motion } from 'framer-motion';
+import AnimatedAccordion from '../ui/AnimatedAccordion';
 
 /**
  * プレイリストコンポーネントのプロパティ
@@ -19,6 +18,7 @@ import { motion } from 'framer-motion';
  * @property {(index: number) => void} onVideoSelect - 動画が選択されたときのコールバック関数
  * @property {(videos: MatchupVideo[]) => Object} getCharacterGroupedVideos - 動画をキャラクターごとにグループ化する関数
  * @property {(isOpen: boolean) => void} setIsOpen - プレイリストの開閉状態を設定する関数
+ * @property {RefObject<HTMLDivElement | null>} [playerContainerRef] - プレーヤーコンテナへの参照
  */
 interface PlaylistProps {
   videos: MatchupVideo[];
@@ -30,7 +30,8 @@ interface PlaylistProps {
   toggleAccordion: (directory: string, charKey: string) => void;
   onVideoSelect: (url: string) => void;
   getCharacterGroupedVideos: (videos: MatchupVideo[]) => {[key: string]: {icon1: CharacterIcon | null, icon2: CharacterIcon | null, videos: MatchupVideo[]}};
-  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+  setIsOpen: (isOpen: boolean) => void;
+  playerContainerRef?: RefObject<HTMLDivElement | null>;
 }
 
 /**
@@ -64,50 +65,9 @@ const Playlist: React.FC<PlaylistProps> = ({
   toggleAccordion,
   onVideoSelect,
   getCharacterGroupedVideos,
-  setIsOpen
+  setIsOpen,
+  playerContainerRef
 }) => {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
-  const [isInitialRender, setIsInitialRender] = useState(true);
-
-  // 初回レンダリング後にフラグを更新
-  useEffect(() => {
-    if (isInitialRender) {
-      setIsInitialRender(false);
-    }
-  }, []);
-
-  // コンテンツの高さを再計算する関数
-  const updateContentHeight = () => {
-    if (contentRef.current && isOpen) {
-      // 最大高さを400pxに制限
-      const calculatedHeight = Math.min(contentRef.current.scrollHeight, 400);
-      setContentHeight(calculatedHeight);
-    }
-  };
-
-  // プレイリストが開かれたとき、またはディレクトリやグループの展開状態が変わったときに高さを更新
-  useEffect(() => {
-    updateContentHeight();
-  }, [isOpen, expandedDirectories, expandedGroups]);
-
-  // ResizeObserverを使用してコンテンツの高さ変更を監視
-  useEffect(() => {
-    if (!contentRef.current || !isOpen) return;
-
-    const resizeObserver = new ResizeObserver(() => {
-      updateContentHeight();
-    });
-
-    resizeObserver.observe(contentRef.current);
-
-    return () => {
-      if (contentRef.current) {
-        resizeObserver.unobserve(contentRef.current);
-      }
-    };
-  }, [isOpen]);
-
   // 事前にコンテンツをレンダリングしておく
   const renderDirectoryGroups = () => {
     return Object.keys(groupedVideos).length > 0 ? (
@@ -136,35 +96,14 @@ const Playlist: React.FC<PlaylistProps> = ({
   if (videos.length === 0) return null;
   
   return (
-    <div className="playlist-container mb-4">
-      <div className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border border-border dark:border-gray-800 overflow-hidden">
-        <AccordionHeader
-          title={`プレイリスト (${videos.length})`}
-          isOpen={isOpen}
-          onClick={() => setIsOpen(!isOpen)}
-        />
-        
-        <motion.div
-          className={`overflow-hidden ${isInitialRender ? '' : 'transition-all duration-300 ease-in-out'}`}
-          animate={{ 
-            height: isOpen ? (typeof contentHeight === "number" ? contentHeight : 400) : 0,
-            opacity: isOpen ? 1 : 0
-          }}
-          initial={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.2, ease: "easeOut" }}
-          style={{
-            visibility: isOpen ? 'visible' : 'hidden'
-          }}
-        >
-          <div 
-            ref={contentRef}
-            className="max-h-[400px] overflow-y-auto custom-scrollbar bg-card dark:bg-card/95 border-t border-border dark:border-gray-800"
-          >
-            {renderDirectoryGroups()}
-          </div>
-        </motion.div>
-      </div>
-    </div>
+    <AnimatedAccordion
+      title={`プレイリスト (${videos.length})`}
+      isOpen={isOpen}
+      onToggle={setIsOpen}
+      playerContainerRef={playerContainerRef as RefObject<HTMLDivElement | null>}
+    >
+      {renderDirectoryGroups()}
+    </AnimatedAccordion>
   );
 };
 

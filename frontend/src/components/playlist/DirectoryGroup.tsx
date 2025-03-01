@@ -64,7 +64,7 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
   const updateContentHeight = () => {
     if (contentRef.current && isExpanded) {
       // 最大高さを300pxに制限
-      const calculatedHeight = Math.min(contentRef.current.scrollHeight, 300);
+      const calculatedHeight = Math.min(contentRef.current.scrollHeight, 400);
       setContentHeight(calculatedHeight);
     }
   };
@@ -149,7 +149,7 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
           visibility: isExpanded ? 'visible' : 'hidden'
         }}
       >
-        <div ref={contentRef} className="space-y-2 overflow-y-auto max-h-[300px]">
+        <div ref={contentRef} className="space-y-2 overflow-y-auto max-h-[400px]">
           {renderContent()}
         </div>
       </div>

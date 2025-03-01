@@ -11,6 +11,7 @@ import VideoItem, { MatchupVideo } from './VideoItem';
  * @property {CharacterIcon | null} group.icon1 - 1つ目のキャラクターアイコン
  * @property {CharacterIcon | null} group.icon2 - 2つ目のキャラクターアイコン
  * @property {MatchupVideo[]} group.videos - グループ内の動画リスト
+ * @property {string} [group.useChara] - 使用キャラクター名（英語）
  * @property {boolean} isExpanded - グループが展開されているかどうか
  * @property {(directory: string, charKey: string) => void} toggleAccordion - アコーディオンの開閉を切り替える関数
  * @property {MatchupVideo[]} videos - 全ての動画リスト
@@ -24,6 +25,7 @@ interface CharacterGroupProps {
     icon1: CharacterIcon | null;
     icon2: CharacterIcon | null;
     videos: MatchupVideo[];
+    useChara?: string;
   };
   isExpanded: boolean;
   toggleAccordion: (directory: string, charKey: string) => void;
@@ -67,6 +69,16 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
   const [isInitialRender, setIsInitialRender] = useState(true);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState(-1);
   
+  // デバッグ用ログ
+  useEffect(() => {
+    console.log('CharacterGroup mounted:', {
+      charKey,
+      useChara: group.useChara,
+      icon1: group.icon1?.eng,
+      icon2: group.icon2?.eng
+    });
+  }, [charKey, group.useChara, group.icon1, group.icon2]);
+  
   // 初回レンダリング後にフラグを更新
   useEffect(() => {
     if (isInitialRender) {
@@ -77,8 +89,8 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
   // コンテンツの高さを計算
   useEffect(() => {
     if (contentRef.current && isExpanded) {
-      // 最大高さを200pxに制限
-      const calculatedHeight = Math.min(contentRef.current.scrollHeight, 200);
+      // 最大高さを300pxに制限
+      const calculatedHeight = Math.min(contentRef.current.scrollHeight, 300);
       setContentHeight(calculatedHeight);
       // 親コンポーネントに高さの変更を通知
       if (onHeightChange) {
@@ -127,9 +139,9 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
       >
         <div className="flex items-center">
           {/* キャラクターアイコン */}
-          <CharacterIconPair icon1={group.icon1} icon2={group.icon2} />
+          <CharacterIconPair icon1={group.icon1} icon2={group.icon2} useChara={group.useChara} />
           <span className="text-xs text-muted-foreground">
-            {group.videos.length}件 ({totalTimestamps}タイムスタンプ)
+            {group.videos.length}件
           </span>
         </div>
         <svg 
@@ -152,7 +164,7 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
           visibility: isExpanded ? 'visible' : 'hidden'
         }}
       >
-        <div ref={contentRef} className="space-y-1 p-2 overflow-y-auto max-h-[200px]">
+        <div ref={contentRef} className="space-y-1 p-2 overflow-y-auto max-h-[300px]">
           {renderVideoItems()}
         </div>
       </div>
