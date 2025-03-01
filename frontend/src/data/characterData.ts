@@ -29,7 +29,7 @@ export const normalizeJapanese = (str: string): string => {
 // キャラクターアイコンのリスト
 export const characterIcons: CharacterIcon[] = [
   { eng: 'Banjo & Kazooie', jp: 'バンジョー＆カズーイ', anotation: ['banjo'], path: '/images/chara_icon/Banjo & Kazooie 0.png' },
-  { eng: 'Bayonetta', jp: 'ベヨネッタ', anotation: ['bayo', 'bayo2'], path: '/images/chara_icon/Bayonetta 0.png' },
+  { eng: 'Bayonetta', jp: 'ベヨネッタ', anotation: ['beyo', 'beyo2'], path: '/images/chara_icon/Bayonetta 0.png' },
   { eng: 'Bowser', jp: 'クッパ', anotation: ['bowser'], path: '/images/chara_icon/Bowser 0.png' },
   { eng: 'Byleth', jp: 'ベレト', anotation: ['byleth', 'byleth_f'], path: '/images/chara_icon/Byleth 0.png' },
   { eng: 'Captain Falcon', jp: 'キャプテン・ファルコン', anotation: ['cf'], path: '/images/chara_icon/Captain Falcon 0.png' },
@@ -84,7 +84,7 @@ export const characterIcons: CharacterIcon[] = [
   { eng: 'Palutena', jp: 'パルテナ', anotation: ['palutena'], path: '/images/chara_icon/Palutena 0.png' },
   { eng: 'Peach', jp: 'ピーチ', anotation: ['peach'], path: '/images/chara_icon/Peach 0.png' },
   { eng: 'Pichu', jp: 'ピチュー', anotation: ['pichu'], path: '/images/chara_icon/Pichu 0.png' },
-  { eng: 'Pikachu', jp: 'ピカチュウ', anotation: ['pikachu'], path: '/images/chara_icon/Pikachu 0.png' },
+  { eng: 'Pikachu', jp: 'ピカチュウ', anotation: ['pika'], path: '/images/chara_icon/Pikachu 0.png' },
   { eng: 'Pikmin', jp: 'ピクミン＆オリマー', anotation: ['olimar'], path: '/images/chara_icon/Pikmin 0.png' },
   { eng: 'Piranha Plant', jp: 'パックンフラワー', anotation: ['plant'], path: '/images/chara_icon/Piranha Plant 0.png' },
   { eng: 'Pit', jp: 'ピット', anotation: ['pit'], path: '/images/chara_icon/Pit 0.png' },
@@ -94,7 +94,7 @@ export const characterIcons: CharacterIcon[] = [
   { eng: 'Richter', jp: 'リヒター', anotation: ['richter'], path: '/images/chara_icon/Richter 0.png' },
   { eng: 'Ridley', jp: 'リドリー', anotation: ['ridley'], path: '/images/chara_icon/Ridley 0.png' },
   { eng: 'Robin', jp: 'ルフレ', anotation: ['robin', 'robin_f'], path: '/images/chara_icon/Robin 0.png' },
-  { eng: 'Rosalina & Luma', jp: 'ロゼッタ＆チコ', anotation: ['roselina'], path: '/images/chara_icon/Rosalina & Luma 0.png' },
+  { eng: 'Rosalina & Luma', jp: 'ロゼッタ＆チコ', anotation: ['rosalina'], path: '/images/chara_icon/Rosalina & Luma 0.png' },
   { eng: 'Roy', jp: 'ロイ', anotation: ['roy'], path: '/images/chara_icon/Roy 0.png' },
   { eng: 'Ryu', jp: 'リュウ', anotation: ['ryu'], path: '/images/chara_icon/Ryu 0.png' },
   { eng: 'Samus', jp: 'サムス', anotation: ['sumus'], path: '/images/chara_icon/Samus 0.png' },

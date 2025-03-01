@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
 interface YouTubePlayerProps {
   url: string;
@@ -10,9 +10,45 @@ interface YouTubePlayerProps {
 const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   url,
   width = '100%',
-  height = '315',
+  height = '100%',
   autoplay = false,
 }) => {
+  const [embedUrl, setEmbedUrl] = useState<string>('');
+
+  // URLが変更されたときに埋め込みURLを更新
+  useEffect(() => {
+    console.log('YouTubePlayer: URLが更新されました', url);
+    
+    // YouTubeのURLからビデオIDを抽出
+    const videoId = extractVideoId(url);
+    if (!videoId) {
+      console.error('無効なYouTube URL:', url);
+      return;
+    }
+
+    // 埋め込みURLを作成
+    let newEmbedUrl = `https://www.youtube.com/embed/${videoId}`;
+    
+    // クエリパラメータを追加
+    const queryParams = [];
+    
+    if (autoplay) {
+      queryParams.push('autoplay=1');
+    }
+    
+    const startTime = extractStartTime(url);
+    if (startTime !== null) {
+      queryParams.push(`start=${startTime}`);
+    }
+    
+    if (queryParams.length > 0) {
+      newEmbedUrl += `?${queryParams.join('&')}`;
+    }
+
+    console.log('新しい埋め込みURL:', newEmbedUrl);
+    setEmbedUrl(newEmbedUrl);
+  }, [url, autoplay]);
+
   // YouTubeのURLからビデオIDを抽出する関数
   const extractVideoId = (url: string): string | null => {
     // 通常のYouTube URL (例: https://www.youtube.com/watch?v=VIDEO_ID)
@@ -49,41 +85,22 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
     return null;
   };
 
-  const videoId = extractVideoId(url);
-  const startTime = extractStartTime(url);
-  
-  if (!videoId) {
-    return <div className="text-red-500">無効なYouTube URLです</div>;
-  }
-
-  // 埋め込みURLを作成
-  let embedUrl = `https://www.youtube.com/embed/${videoId}`;
-  
-  // クエリパラメータを追加
-  const queryParams = [];
-  
-  if (autoplay) {
-    queryParams.push('autoplay=1');
-  }
-  
-  if (startTime !== null) {
-    queryParams.push(`start=${startTime}`);
-  }
-  
-  if (queryParams.length > 0) {
-    embedUrl += `?${queryParams.join('&')}`;
+  if (!embedUrl) {
+    return <div className="text-red-500">動画を読み込み中...</div>;
   }
 
   return (
-    <div className="youtube-player-container">
+    <div className="youtube-player-container" style={{ height: typeof height === 'string' && height.endsWith('px') ? height : typeof height === 'number' ? `${height}px` : height }}>
       <iframe
+        key={embedUrl} // URLが変わるたびに再レンダリングされるようにkeyを設定
         width={width}
-        height={height}
+        height="100%"
         src={embedUrl}
         title="YouTube video player"
         frameBorder="0"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         allowFullScreen
+        style={{ height: '100%', width: '100%' }}
       ></iframe>
     </div>
   );

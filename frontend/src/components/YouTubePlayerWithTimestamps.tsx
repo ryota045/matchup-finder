@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import YouTubePlayer from './YouTubePlayer';
-import YouTubeTimestamp, { TimestampItem } from './YouTubeTimestamp';
+import YouTubeTimestamp, { TimestampItem, MatchupVideo } from './YouTubeTimestamp';
 
 interface YouTubePlayerWithTimestampsProps {
   url: string;
@@ -8,22 +8,31 @@ interface YouTubePlayerWithTimestampsProps {
   width?: number | string;
   height?: number | string;
   autoplay?: boolean;
+  videos?: MatchupVideo[];
+  selectedVideoIndex?: number;
+  onVideoSelect?: (index: number) => void;
 }
 
 const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = ({
   url,
   timestamps,
   width = '100%',
-  height = '315',
+  height = '480',
   autoplay = false,
+  videos = [],
+  selectedVideoIndex = -1,
+  onVideoSelect,
 }) => {
   const [currentUrl, setCurrentUrl] = useState(url);
   const [currentTime, setCurrentTime] = useState(0);
+  const [currentTimestamps, setCurrentTimestamps] = useState<TimestampItem[]>(timestamps);
 
-  // URLが変更されたら、現在のURLを更新
+  // 親コンポーネントから渡されたURLが変更されたときに更新
   useEffect(() => {
+    console.log('YouTubePlayerWithTimestamps: 親から渡されたURLが更新されました', url);
     setCurrentUrl(url);
-  }, [url]);
+    setCurrentTimestamps(timestamps);
+  }, [url, timestamps]);
 
   // タイムスタンプがクリックされたときの処理
   const handleTimestampClick = (time: number) => {
@@ -37,6 +46,14 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
     setCurrentTime(time);
   };
 
+  // 動画が選択されたときの処理
+  const handleVideoSelect = (index: number) => {
+    console.log('YouTubePlayerWithTimestamps: 動画選択ハンドラーが呼び出されました', index);
+    if (onVideoSelect) {
+      onVideoSelect(index);
+    }
+  };
+
   // YouTubeのURLからビデオIDを抽出する関数
   const extractVideoId = (url: string): string | null => {
     const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
@@ -48,7 +65,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   return (
     <div className="youtube-player-with-timestamps">
       <div className="flex flex-col md:flex-row gap-4">
-        <div className="flex-grow">
+        <div className="flex-grow" style={{ minHeight: typeof height === 'string' && height.endsWith('px') ? height : typeof height === 'number' ? `${height}px` : `${height}px` }}>
           <YouTubePlayer 
             url={currentUrl} 
             width={width} 
@@ -56,11 +73,14 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
             autoplay={true} 
           />
         </div>
-        <div className="md:w-64">
+        <div className="md:w-80">
           <YouTubeTimestamp 
-            timestamps={timestamps} 
+            timestamps={currentTimestamps} 
             onTimestampClick={handleTimestampClick}
             currentTime={currentTime}
+            videos={videos}
+            selectedVideoIndex={selectedVideoIndex}
+            onVideoSelect={handleVideoSelect}
           />
         </div>
       </div>

@@ -17,6 +17,8 @@ interface MatchupVideo {
   title: string;
   matchupKey: string;
   directory: string;
+  chara1: string;
+  chara2: string;
 }
 
 export default function MatchupPage() {
@@ -28,6 +30,8 @@ export default function MatchupPage() {
   const [matchupVideos, setMatchupVideos] = useState<MatchupVideo[]>([]);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState<number>(0);
   const [groupedVideos, setGroupedVideos] = useState<{[key: string]: MatchupVideo[]}>({});
+  const [expandedGroups, setExpandedGroups] = useState<{[key: string]: boolean}>({});
+  const [expandedDirectories, setExpandedDirectories] = useState<{[key: string]: boolean}>({});
 
   useEffect(() => {
     const fetchMatchupLists = async () => {
@@ -69,6 +73,17 @@ export default function MatchupPage() {
     
     console.log('検索条件:', { 使用キャラクター検索: hasUserCharacter, 対戦キャラクター検索: hasOpponentCharacters });
     
+    // キャラクターの組み合わせごとにタイムスタンプをまとめるためのマップ
+    const matchupMap: { [key: string]: { 
+      url: string, 
+      timestamps: TimestampItem[], 
+      title: string, 
+      matchupKey: string, 
+      directory: string,
+      chara1: string,
+      chara2: string
+    }} = {};
+    
     matchupLists.forEach(item => {
       const matchupData = item.content;
       console.log(`ディレクトリ ${item.directory} のデータ:`, matchupData);
@@ -98,6 +113,28 @@ export default function MatchupPage() {
               userCharacterMatched = anotations.some(anotation => {
                 // 単語境界でのマッチをチェック
                 const regex = new RegExp(`\\b${anotation.toLowerCase()}\\b`);
+                
+                // 自分対自分の場合（例：RyuvsRyu）は、両方のキャラクターが同じ場合のみマッチさせる
+                if (chara1.toLowerCase() === chara2.toLowerCase()) {
+                  // 選択したキャラクターも同じキャラクターの場合のみマッチ
+                  return anotations.length === 1 && regex.test(chara1.toLowerCase());
+                }
+                
+                // 選択したキャラクターが1つだけで、それが自分対自分の検索の場合
+                // (例：Ryuを選択して、RyuvsRyuを検索したい場合)
+                if (anotations.length === 1 && anotation.toLowerCase() === anotation.toLowerCase()) {
+                  // 選択したキャラクターが自分対自分の検索の場合は、
+                  // 対戦相手が同じキャラクターの場合のみマッチさせる
+                  const isCharaSelfMatch = chara1.toLowerCase() === chara2.toLowerCase() && 
+                                          regex.test(chara1.toLowerCase());
+                  
+                  // 自分対自分の検索でない場合は通常のマッチング
+                  const isNormalMatch = chara1.toLowerCase() !== chara2.toLowerCase() && 
+                                       (regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase()));
+                  
+                  return isCharaSelfMatch || isNormalMatch;
+                }
+                
                 return regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase());
               });
               
@@ -118,6 +155,27 @@ export default function MatchupPage() {
                 return anotations.some(anotation => {
                   // 単語境界でのマッチをチェック
                   const regex = new RegExp(`\\b${anotation.toLowerCase()}\\b`);
+                  
+                  // 自分対自分の場合（例：RyuvsRyu）は、両方のキャラクターが同じ場合のみマッチさせる
+                  if (chara1.toLowerCase() === chara2.toLowerCase()) {
+                    // 選択したキャラクターも同じキャラクターの場合のみマッチ
+                    return anotations.length === 1 && regex.test(chara1.toLowerCase());
+                  }
+                  
+                  // 選択したキャラクターが1つだけで、それが自分対自分の検索の場合
+                  if (anotations.length === 1 && anotation.toLowerCase() === anotation.toLowerCase()) {
+                    // 選択したキャラクターが自分対自分の検索の場合は、
+                    // 対戦相手が同じキャラクターの場合のみマッチさせる
+                    const isCharaSelfMatch = chara1.toLowerCase() === chara2.toLowerCase() && 
+                                            regex.test(chara1.toLowerCase());
+                    
+                    // 自分対自分の検索でない場合は通常のマッチング
+                    const isNormalMatch = chara1.toLowerCase() !== chara2.toLowerCase() && 
+                                         (regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase()));
+                    
+                    return isCharaSelfMatch || isNormalMatch;
+                  }
+                  
                   return regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase());
                 });
               });
@@ -143,15 +201,31 @@ export default function MatchupPage() {
                   });
                 }
                 
-                videos.push({
-                  url: videoUrl,
-                  timestamps,
-                  title: value.title || key,
-                  matchupKey: key,
-                  directory: item.directory
-                });
+                // キャラクターの組み合わせを特定するキーを作成
+                const chara1 = value.chara1 || '';
+                const chara2 = value.chara2 || '';
+                // URLも含めたユニークなキーを作成（同じキャラクター組み合わせでも異なる動画は別々に表示）
+                const matchupCombinationKey = `${chara1}-${chara2}-${videoUrl}`;
                 
-                console.log('動画追加:', { url: videoUrl, key, timestamps: timestamps.length });
+                // 既存の同じ組み合わせがあればタイムスタンプを追加、なければ新規作成
+                if (matchupMap[matchupCombinationKey]) {
+                  // 既存のエントリにタイムスタンプを追加
+                  matchupMap[matchupCombinationKey].timestamps = [
+                    ...matchupMap[matchupCombinationKey].timestamps,
+                    ...timestamps
+                  ];
+                } else {
+                  // 新しいエントリを作成
+                  matchupMap[matchupCombinationKey] = {
+                    url: videoUrl,
+                    timestamps,
+                    title: value.title || key,
+                    matchupKey: key,
+                    directory: item.directory,
+                    chara1,
+                    chara2
+                  };
+                }
               }
             }
           });
@@ -180,6 +254,27 @@ export default function MatchupPage() {
                 userCharacterMatched = anotations.some(anotation => {
                   // 単語境界でのマッチをチェック
                   const regex = new RegExp(`\\b${anotation.toLowerCase()}\\b`);
+                  
+                  // 自分対自分の場合（例：RyuvsRyu）は、両方のキャラクターが同じ場合のみマッチさせる
+                  if (chara1.toLowerCase() === chara2.toLowerCase()) {
+                    // 選択したキャラクターも同じキャラクターの場合のみマッチ
+                    return anotations.length === 1 && regex.test(chara1.toLowerCase());
+                  }
+                  
+                  // 選択したキャラクターが1つだけで、それが自分対自分の検索の場合
+                  if (anotations.length === 1 && anotation.toLowerCase() === anotation.toLowerCase()) {
+                    // 選択したキャラクターが自分対自分の検索の場合は、
+                    // 対戦相手が同じキャラクターの場合のみマッチさせる
+                    const isCharaSelfMatch = chara1.toLowerCase() === chara2.toLowerCase() && 
+                                            regex.test(chara1.toLowerCase());
+                    
+                    // 自分対自分の検索でない場合は通常のマッチング
+                    const isNormalMatch = chara1.toLowerCase() !== chara2.toLowerCase() && 
+                                         (regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase()));
+                    
+                    return isCharaSelfMatch || isNormalMatch;
+                  }
+                  
                   return regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase());
                 });
                 
@@ -200,6 +295,27 @@ export default function MatchupPage() {
                   return anotations.some(anotation => {
                     // 単語境界でのマッチをチェック
                     const regex = new RegExp(`\\b${anotation.toLowerCase()}\\b`);
+                    
+                    // 自分対自分の場合（例：RyuvsRyu）は、両方のキャラクターが同じ場合のみマッチさせる
+                    if (chara1.toLowerCase() === chara2.toLowerCase()) {
+                      // 選択したキャラクターも同じキャラクターの場合のみマッチ
+                      return anotations.length === 1 && regex.test(chara1.toLowerCase());
+                    }
+                    
+                    // 選択したキャラクターが1つだけで、それが自分対自分の検索の場合
+                    if (anotations.length === 1 && anotation.toLowerCase() === anotation.toLowerCase()) {
+                      // 選択したキャラクターが自分対自分の検索の場合は、
+                      // 対戦相手が同じキャラクターの場合のみマッチさせる
+                      const isCharaSelfMatch = chara1.toLowerCase() === chara2.toLowerCase() && 
+                                              regex.test(chara1.toLowerCase());
+                      
+                      // 自分対自分の検索でない場合は通常のマッチング
+                      const isNormalMatch = chara1.toLowerCase() !== chara2.toLowerCase() && 
+                                           (regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase()));
+                      
+                      return isCharaSelfMatch || isNormalMatch;
+                    }
+                    
                     return regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase());
                   });
                 });
@@ -225,15 +341,31 @@ export default function MatchupPage() {
                     });
                   }
                   
-                  videos.push({
-                    url: videoUrl,
-                    timestamps,
-                    title: value.title || key,
-                    matchupKey: key,
-                    directory: item.directory
-                  });
+                  // キャラクターの組み合わせを特定するキーを作成
+                  const chara1 = value.chara1 || '';
+                  const chara2 = value.chara2 || '';
+                  // URLも含めたユニークなキーを作成（同じキャラクター組み合わせでも異なる動画は別々に表示）
+                  const matchupCombinationKey = `${chara1}-${chara2}-${videoUrl}`;
                   
-                  console.log('動画追加:', { url: videoUrl, key, timestamps: timestamps.length });
+                  // 既存の同じ組み合わせがあればタイムスタンプを追加、なければ新規作成
+                  if (matchupMap[matchupCombinationKey]) {
+                    // 既存のエントリにタイムスタンプを追加
+                    matchupMap[matchupCombinationKey].timestamps = [
+                      ...matchupMap[matchupCombinationKey].timestamps,
+                      ...timestamps
+                    ];
+                  } else {
+                    // 新しいエントリを作成
+                    matchupMap[matchupCombinationKey] = {
+                      url: videoUrl,
+                      timestamps,
+                      title: value.title || key,
+                      matchupKey: key,
+                      directory: item.directory,
+                      chara1,
+                      chara2
+                    };
+                  }
                 }
               }
             }
@@ -242,14 +374,17 @@ export default function MatchupPage() {
       }
     });
     
-    console.log('検索結果:', videos.length, '件の動画が見つかりました');
+    // マップから配列に変換
+    const combinedVideos = Object.values(matchupMap);
+    
+    console.log('検索結果（組み合わせ後）:', combinedVideos.length, '件の動画が見つかりました');
     
     // 動画をソート（ディレクトリ名でソート）
-    videos.sort((a, b) => a.directory.localeCompare(b.directory));
+    combinedVideos.sort((a, b) => a.directory.localeCompare(b.directory));
     
     // ディレクトリごとにグループ化
     const grouped: {[key: string]: MatchupVideo[]} = {};
-    videos.forEach(video => {
+    combinedVideos.forEach(video => {
       if (!grouped[video.directory]) {
         grouped[video.directory] = [];
       }
@@ -257,9 +392,97 @@ export default function MatchupPage() {
     });
     
     setGroupedVideos(grouped);
-    setMatchupVideos(videos);
-    setSelectedVideoIndex(videos.length > 0 ? 0 : -1); // 検索結果が変わったら最初のビデオを選択
+    setMatchupVideos(combinedVideos);
+    
+    // ディレクトリごとのアコーディオンの初期状態を設定
+    const initialDirectoryState: {[key: string]: boolean} = {};
+    Object.keys(grouped).forEach((directory, index) => {
+      // 最初のディレクトリだけを開いた状態にする
+      initialDirectoryState[directory] = index === 0;
+    });
+    setExpandedDirectories(initialDirectoryState);
+    
+    // キャラクターの組み合わせごとにアコーディオンの初期状態を設定
+    const initialExpandedState: {[key: string]: boolean} = {};
+    combinedVideos.forEach(video => {
+      const character1 = characterIcons.find(c => 
+        c.anotation.some(a => video.chara1.toLowerCase().includes(a.toLowerCase()))
+      );
+      const character2 = characterIcons.find(c => 
+        c.anotation.some(a => video.chara2.toLowerCase().includes(a.toLowerCase()))
+      );
+      
+      if (character1 && character2) {
+        // キャラクター名をアルファベット順にソートして、AvsB と BvsA を同じグループにする
+        const sortedChars = [character1.eng, character2.eng].sort();
+        const charKey = `${sortedChars[0]}-${sortedChars[1]}`;
+        // 初期状態では最初のグループだけを開いた状態にする
+        initialExpandedState[charKey] = false;
+      }
+    });
+    
+    setExpandedGroups(initialExpandedState);
+    setSelectedVideoIndex(combinedVideos.length > 0 ? 0 : -1); // 検索結果が変わったら最初のビデオを選択
   }, [selectedCharacter, selectedCharacters, matchupLists]);
+
+  // キャラクターアイコンの組み合わせごとにビデオをグループ化する関数
+  const getCharacterGroupedVideos = (videos: MatchupVideo[]) => {
+    const charGroups: {[key: string]: {icon1: any, icon2: any, videos: MatchupVideo[]}} = {};
+    
+    videos.forEach(video => {
+      const character1 = characterIcons.find(c => 
+        c.anotation.some(a => video.chara1.toLowerCase().includes(a.toLowerCase()))
+      );
+      const character2 = characterIcons.find(c => 
+        c.anotation.some(a => video.chara2.toLowerCase().includes(a.toLowerCase()))
+      );
+      
+      if (character1 && character2) {
+        // キャラクター名をアルファベット順にソートして、AvsB と BvsA を同じグループにする
+        const sortedChars = [character1.eng, character2.eng].sort();
+        const charKey = `${sortedChars[0]}-${sortedChars[1]}`;
+        
+        if (!charGroups[charKey]) {
+          charGroups[charKey] = {
+            icon1: character1,
+            icon2: character2,
+            videos: []
+          };
+        }
+        
+        charGroups[charKey].videos.push(video);
+      } else {
+        // キャラクターが見つからない場合は「その他」グループに入れる
+        const otherKey = 'other';
+        if (!charGroups[otherKey]) {
+          charGroups[otherKey] = {
+            icon1: null,
+            icon2: null,
+            videos: []
+          };
+        }
+        charGroups[otherKey].videos.push(video);
+      }
+    });
+    
+    return charGroups;
+  };
+  
+  // アコーディオンの開閉を切り替える関数
+  const toggleAccordion = (key: string) => {
+    setExpandedGroups(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
+  };
+  
+  // ディレクトリアコーディオンの開閉を切り替える関数
+  const toggleDirectoryAccordion = (directory: string) => {
+    setExpandedDirectories(prev => ({
+      ...prev,
+      [directory]: !prev[directory]
+    }));
+  };
 
   return (
     <div className="container mx-auto p-4">
@@ -288,104 +511,17 @@ export default function MatchupPage() {
           </div>
 
           <div className="mb-8">
-            <h2 className="text-xl font-semibold mb-4">選択結果</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 bg-white rounded-lg shadow-md p-4">
-              <div>
-                <h3 className="text-lg font-medium mb-2">使用キャラクター:</h3>
-                {selectedCharacter ? (
-                  <p className="p-2 bg-blue-100 rounded">
-                    {(() => {
-                      // カンマ区切りのanotation値を配列に分割
-                      const anotations = selectedCharacter.split(',');
-                      
-                      // 最初のanotation値に対応するキャラクターを検索
-                      const character = characterIcons.find(c => 
-                        c.anotation.some(a => anotations.includes(a.toLowerCase()))
-                      );
-                      
-                      return character ? character.jp : selectedCharacter;
-                    })()}
-                  </p>
-                ) : (
-                  <p className="text-gray-500">キャラクターが選択されていません</p>
-                )}
-              </div>
-              
-              <div>
-                <h3 className="text-lg font-medium mb-2">対戦キャラクター:</h3>
-                {selectedCharacters.length > 0 ? (
-                  <div className="flex flex-wrap gap-2">
-                    {selectedCharacters.map(char => {
-                      // カンマ区切りのanotation値を配列に分割
-                      const anotations = char.split(',');
-                      
-                      // いずれかのanotation値に対応するキャラクターを検索
-                      const character = characterIcons.find(c => 
-                        c.anotation.some(a => anotations.includes(a.toLowerCase()))
-                      );
-                      
-                      const displayName = character ? character.jp : char;
-                      
-                      return (
-                        <span key={char} className="px-2 py-1 bg-blue-100 rounded">{displayName}</span>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-gray-500">キャラクターが選択されていません</p>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">マッチアップ動画 ({matchupVideos.length}件)</h2>
             
             {matchupVideos.length === 0 ? (
               <div className="bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-3 rounded">
                 <p>選択したキャラクターのマッチアップ動画が見つかりませんでした。</p>
               </div>
-            ) : (
+            ) 
+            : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                {/* プレイリスト部分 */}
-                <div className="lg:col-span-1 bg-white rounded-lg shadow-md p-4 overflow-auto max-h-[600px]">
-                  <h3 className="text-lg font-semibold mb-4">プレイリスト</h3>
-                  
-                  {Object.entries(groupedVideos).map(([directory, videos]) => (
-                    <div key={directory} className="mb-4">
-                      <h4 className="font-medium text-gray-700 bg-gray-100 p-2 rounded mb-2">{directory}</h4>
-                      <ul className="space-y-2">
-                        {videos.map((video, videoIndex) => {
-                          const globalIndex = matchupVideos.findIndex(v => 
-                            v.url === video.url && v.matchupKey === video.matchupKey
-                          );
-                          return (
-                            <li key={videoIndex}>
-                              <button
-                                className={`w-full text-left p-2 rounded-md transition-colors ${
-                                  selectedVideoIndex === globalIndex 
-                                    ? 'bg-blue-100 text-blue-800' 
-                                    : 'hover:bg-gray-100'
-                                }`}
-                                onClick={() => setSelectedVideoIndex(globalIndex)}
-                              >
-                                <div className="font-medium">{video.matchupKey}</div>
-                                <div className="text-xs text-gray-500">
-                                  {video.timestamps.length > 0 
-                                    ? `${video.timestamps.length} タイムスタンプ` 
-                                    : 'タイムスタンプなし'}
-                                </div>
-                              </button>
-                            </li>
-                          );
-                        })}
-                      </ul>
-                    </div>
-                  ))}
-                </div>
-                
                 {/* 動画プレーヤー部分 */}
-                <div className="lg:col-span-2">
+                <div className="lg:col-span-3">
                   {selectedVideoIndex >= 0 && matchupVideos[selectedVideoIndex] && (
                     <div className="bg-white rounded-lg shadow-md p-4">
                       <div className="flex items-center justify-between mb-4">
@@ -396,11 +532,18 @@ export default function MatchupPage() {
                       </div>
                       
                       <YouTubePlayerWithTimestamps
+                        key={`video-${selectedVideoIndex}-${matchupVideos[selectedVideoIndex].url}`}
                         url={matchupVideos[selectedVideoIndex].url}
                         timestamps={matchupVideos[selectedVideoIndex].timestamps}
                         width="100%"
-                        height="500"
+                        height={600}
                         autoplay={false}
+                        videos={matchupVideos}
+                        selectedVideoIndex={selectedVideoIndex}
+                        onVideoSelect={(index) => {
+                          console.log(`動画選択: インデックス ${index} を選択`);
+                          setSelectedVideoIndex(index);
+                        }}
                       />
                     </div>
                   )}
@@ -409,7 +552,7 @@ export default function MatchupPage() {
             )}
           </div>
 
-          <div className="mb-8">
+          {/* <div className="mb-8">
             <h2 className="text-xl font-semibold mb-4">すべてのマッチアップデータ</h2>
             <div className="grid grid-cols-1 gap-6">
               {matchupLists.map((item, index) => (
@@ -421,7 +564,7 @@ export default function MatchupPage() {
                 </div>
               ))}
             </div>
-          </div>
+          </div> */}
         </>
       )}
     </div>
