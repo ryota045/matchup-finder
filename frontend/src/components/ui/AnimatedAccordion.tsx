@@ -79,9 +79,15 @@ const AnimatedAccordion: React.FC<AnimatedAccordionProps> = ({
         // プレーヤーの高さ - 閉じているアコーディオンの高さ - 開いているアコーディオンのヘッダー高さ
         const openAccordionContentMaxHeight = currentPlayerHeight - ((accordionsCount - 1) * closedAccordionHeight) - headerHeight;
         
+        // タブレットサイズでは高さを制限
+        const isTablet = window.innerWidth >= 640 && window.innerWidth < 1024;
+        const tabletMaxHeight = 300; // タブレットでの最大高さ
+        
         // 最小値を設定して、極端に小さくならないようにする
         const minHeight = 200; // 最小高さ（px）
-        const adjustedHeight = `${Math.max(openAccordionContentMaxHeight, minHeight)}px`;
+        const adjustedHeight = isTablet 
+          ? `${Math.min(tabletMaxHeight, Math.max(openAccordionContentMaxHeight, minHeight))}px`
+          : `${Math.max(openAccordionContentMaxHeight, minHeight)}px`;
         
         setCalculatedMaxHeight(adjustedHeight);
       };
