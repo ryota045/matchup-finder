@@ -58,12 +58,16 @@ const CharacterIconPair: React.FC<CharacterIconPairProps> = ({ icon1, icon2, use
     // });
 
     // 使用キャラクターが2つ目のアイコンの場合、順序を入れ替える
-    if (icon2.eng.toLowerCase() === useChara.toLowerCase()) {
+    if (icon2.anotation.some(a => useChara.toLowerCase().includes(a.toLowerCase()))) {
       // console.log('Swapping icons: useChara matches icon2');
       leftIcon = icon2;
       rightIcon = icon1;
-    } else if (icon1.eng.toLowerCase() !== useChara.toLowerCase()) {
+      // console.log("leftIcon", leftIcon);
+      // console.log("rightIcon", rightIcon);
+    } else if (icon1.anotation.some(a => useChara.toLowerCase().includes(a.toLowerCase()))) {
       // console.log('Warning: useChara does not match either icon');
+      // leftIcon = icon1;
+      // rightIcon = icon2;
     }
   }
 

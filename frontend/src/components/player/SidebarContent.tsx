@@ -29,6 +29,7 @@ import { TimestampItem } from '../timestamp/TimestampItem';
  * @property {(directory: string, charKey: string) => void} toggleAccordion - キャラクターグループアコーディオンの開閉を切り替える関数
  * @property {{[key: string]: MatchupVideo[]}} groupedVideos - ディレクトリごとにグループ化された動画
  * @property {(videos: MatchupVideo[]) => any} getCharacterGroupedVideos - 動画をキャラクターごとにグループ化する関数
+ * @property {string} selectedVideoUrl - 選択された動画のURL
  */
 interface SidebarContentProps {
   isPlaylistOpen: boolean;
@@ -51,6 +52,7 @@ interface SidebarContentProps {
   toggleAccordion: (directory: string, charKey: string) => void;
   groupedVideos: {[key: string]: MatchupVideo[]};
   getCharacterGroupedVideos: (videos: MatchupVideo[]) => any;
+  selectedVideoUrl: string;
 }
 
 /**
@@ -80,7 +82,8 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
   toggleDirectoryAccordion,
   toggleAccordion,
   groupedVideos,
-  getCharacterGroupedVideos
+  getCharacterGroupedVideos,
+  selectedVideoUrl
 }) => {
   // 現在の動画のタイムスタンプを取得
   const getCurrentVideoTimestamps = (): TimestampItem[] => {
@@ -120,7 +123,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
     handleTimestampToggle(isOpen);
     
     // player-md以上の場合は、タイムスタンプを開くとプレイリストを閉じる
-    if (isOpen && window.matchMedia('(min-width: 1024px)').matches) {
+    if (isOpen && window.matchMedia('(min-width: 1100px)').matches) {
       handlePlaylistToggle(false);
     }
   };
@@ -130,11 +133,36 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
     handlePlaylistToggle(isOpen);
     
     // player-md以上の場合は、プレイリストを開くとタイムスタンプを閉じる
-    if (isOpen && window.matchMedia('(min-width: 1024px)').matches) {
+    if (isOpen && window.matchMedia('(min-width: 1100px)').matches) {
       handleTimestampToggle(false);
     }
   };
+  
+  // アップロード日でソートされた動画リストを作成
+  const sortedVideos = [...videos].sort((a, b) => {
+    // upload_dateがない場合は後ろに配置
+    if (!a.upload_date) return 1;
+    if (!b.upload_date) return -1;
+    
+    // 降順（最新順）でソート
+    return new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime();
+  });
+  
+  // ディレクトリごとにソートされた動画をグループ化
+  const sortedGroupedVideos: {[key: string]: MatchupVideo[]} = {};
+  Object.keys(groupedVideos).forEach(directory => {
+    sortedGroupedVideos[directory] = [...groupedVideos[directory]].sort((a, b) => {
+      // upload_dateがない場合は後ろに配置
+      if (!a.upload_date) return 1;
+      if (!b.upload_date) return -1;
+      
+      // 降順（最新順）でソート
+      return new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime();
+    });
+  });
 
+  // console.log("selectedCharacter", selectedCharacter);
+  
   return (
     <div className="w-full">
       {/* タイムスタンプとプレイリスト - スマホ表示時はタブ切り替え、タブレット表示時は横並び、デスクトップ表示時は縦並び */}
@@ -149,7 +177,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
               className="mb-2 player-md:mb-4"
               contentClassName="px-4"
               playerContainerRef={playerContainerRef}
-              maxHeight="300px"
+              // maxHeight="300px"
             >
               <TimestampList 
                 timestamps={getCurrentVideoTimestamps()}
@@ -162,8 +190,8 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
           <div className="sm:w-1/2 md:w-1/2 player-md:w-full flex-shrink-0 flex-grow">
             {/* キャラクターアイコン付きプレイリスト */}
             <Playlist
-              videos={videos}
-              groupedVideos={groupedVideos}
+              videos={sortedVideos}
+              groupedVideos={sortedGroupedVideos}
               expandedDirectories={expandedDirectories}
               expandedGroups={expandedGroups}
               isOpen={isPlaylistOpen}
@@ -174,11 +202,12 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
               setIsOpen={handlePlaylistAccordionToggle}
               playerContainerRef={playerContainerRef}
               className="mb-2"
+              selectedVideoUrl={selectedVideoUrl}
             />
           </div>
         </div>
         
-        {/* スマホ表示時のみ表示 */}
+        {/* スマホ表示用のレイアウト */}
         <div className="sm:hidden">
           <YouTubeTimestamp 
             onTimestampClick={handleTimestampClick}
@@ -197,6 +226,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
             activeTab={activeTab}
             // スマホ表示時は独立モードを無効に、それ以外は有効にする
             independentMode={window.innerWidth >= 640}
+            selectedVideoUrl={selectedVideoUrl}
           />
         </div>
       </div>

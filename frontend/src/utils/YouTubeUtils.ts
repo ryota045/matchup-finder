@@ -47,6 +47,27 @@ export const extractStartTime = (url: string): number | null => {
 };
 
 /**
+ * YouTubeのURLから開始時間（秒）を抽出する関数
+ * @param url YouTube動画のURL（t=XXXパラメータを含む）
+ * @returns 開始時間（秒）または無効な場合はnull
+ */
+export const extractTimestampFromUrl = (url: string): number | null => {
+  const videoId = extractVideoId(url);
+  if (!videoId) return null;
+
+  // URLから&t=〇〇sの部分を抽出
+  const timeMatch = url.match(/&t=(\d+)s/);
+  if (timeMatch && timeMatch[1]) {
+    // 抽出した文字列を数値に変換して返す
+    return parseInt(timeMatch[1], 10);
+  }
+
+  // 開始時間がURLに含まれていない場合はnullを返す
+  return null;
+};
+
+
+/**
  * YouTubeの埋め込みURLを生成する関数
  * @param url 元のYouTube動画URL
  * @param autoplay 自動再生するかどうか

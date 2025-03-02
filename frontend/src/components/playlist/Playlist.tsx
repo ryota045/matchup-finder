@@ -20,6 +20,7 @@ import AnimatedAccordion from '../ui/AnimatedAccordion';
  * @property {(isOpen: boolean) => void} setIsOpen - プレイリストの開閉状態を設定する関数
  * @property {RefObject<HTMLDivElement | null>} [playerContainerRef] - プレーヤーコンテナへの参照
  * @property {string} [className] - 追加のCSSクラス名
+ * @property {string} selectedVideoUrl - 選択された動画のURL
  */
 interface PlaylistProps {
   videos: MatchupVideo[];
@@ -34,6 +35,7 @@ interface PlaylistProps {
   setIsOpen: (isOpen: boolean) => void;
   playerContainerRef?: RefObject<HTMLDivElement | null>;
   className?: string;
+  selectedVideoUrl: string;
 }
 
 /**
@@ -69,7 +71,8 @@ const Playlist: React.FC<PlaylistProps> = ({
   getCharacterGroupedVideos,
   setIsOpen,
   playerContainerRef,
-  className = ""
+  className = "",
+  selectedVideoUrl
 }) => {
   // 事前にコンテンツをレンダリングしておく
   const renderDirectoryGroups = () => {
@@ -86,6 +89,7 @@ const Playlist: React.FC<PlaylistProps> = ({
             toggleAccordion={toggleAccordion}
             onVideoSelect={onVideoSelect}
             getCharacterGroupedVideos={getCharacterGroupedVideos}
+            selectedVideoUrl={selectedVideoUrl}
           />
         ))}
       </div>
@@ -100,7 +104,7 @@ const Playlist: React.FC<PlaylistProps> = ({
   
   return (
     <AnimatedAccordion
-      title={`プレイリスト (${videos.length})`}
+      title={`検索結果 (${videos.length})`}
       isOpen={isOpen}
       onToggle={setIsOpen}
       playerContainerRef={playerContainerRef as RefObject<HTMLDivElement | null>}

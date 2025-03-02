@@ -15,6 +15,7 @@ import { CharacterIcon } from './CharacterIconPair';
  * @property {number} selectedVideoIndex - 選択されている動画のインデックス
  * @property {(index: number) => void} onVideoSelect - 動画が選択されたときのコールバック関数
  * @property {(videos: MatchupVideo[]) => Object} getCharacterGroupedVideos - 動画をキャラクターごとにグループ化する関数
+ * @property {string} selectedVideoUrl - 選択された動画のURL
  */
 interface DirectoryGroupProps {
   directory: string;
@@ -25,6 +26,7 @@ interface DirectoryGroupProps {
   toggleAccordion: (directory: string, charKey: string) => void;
   onVideoSelect: (url: string) => void;
   getCharacterGroupedVideos: (videos: MatchupVideo[]) => {[key: string]: {icon1: CharacterIcon | null, icon2: CharacterIcon | null, videos: MatchupVideo[]}};
+  selectedVideoUrl: string;
 }
 
 /**
@@ -54,7 +56,8 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
   expandedGroups,
   toggleAccordion,
   onVideoSelect,
-  getCharacterGroupedVideos
+  getCharacterGroupedVideos,
+  selectedVideoUrl
 }) => {
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
@@ -116,6 +119,7 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
           videos={videos}
           onVideoSelect={onVideoSelect}
           onHeightChange={updateContentHeight}
+          selectedVideoUrl={selectedVideoUrl}
         />
       );
     });

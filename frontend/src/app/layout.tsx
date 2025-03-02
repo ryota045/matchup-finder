@@ -59,7 +59,7 @@ export default function RootLayout({
             <main className="flex-grow main-content">
               {children}
             </main>
-            <Footer />
+            {/* <Footer /> */}
           </div>
         </ThemeProvider>
       </body>

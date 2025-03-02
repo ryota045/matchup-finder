@@ -7,6 +7,9 @@ import YouTubePlayer from './YouTubePlayer';
  * @property {boolean} isVideoSelected - 動画が選択されているかどうか
  * @property {string} currentUrl - 現在の動画URL
  * @property {RefObject<HTMLDivElement | null>} playerContainerRef - プレーヤーコンテナへの参照
+ * @property {boolean} isSelectedCharacter - キャラクターが選択されているかどうか
+ * @property {boolean} isSelectedOpponentCharacters - 対戦キャラクターが選択されているかどうか
+ * @property {(time: number) => void} [onTimeUpdate] - 再生時間が更新されたときのコールバック関数
  */
 interface PlayerContentProps {
   isVideoSelected: boolean;
@@ -14,6 +17,7 @@ interface PlayerContentProps {
   playerContainerRef: RefObject<HTMLDivElement | null>;
   isSelectedCharacter: boolean;
   isSelectedOpponentCharacters: boolean;
+  onTimeUpdate?: (time: number) => void;
 }
 
 /**
@@ -28,7 +32,8 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
   currentUrl,
   playerContainerRef,
   isSelectedCharacter,
-  isSelectedOpponentCharacters
+  isSelectedOpponentCharacters,
+  onTimeUpdate
 }) => {
   return (
     <div className="youtube-player-with-timestamps bg-background dark:bg-background flex justify-center">
@@ -43,7 +48,8 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
             <div className="h-full w-full">
               <YouTubePlayer 
                 url={currentUrl} 
-                autoplay={true} 
+                autoplay={true}
+                onTimeUpdate={onTimeUpdate}
               />
             </div>
           ) : !isSelectedCharacter ? (

@@ -71,7 +71,7 @@ const TimestampItemComponent: React.FC<TimestampItemComponentProps> = ({
   return (
     <li 
       className={`
-        p-2 rounded cursor-pointer transition-all duration-200
+        p-2 rounded cursor-pointer transition-all duration-200 select-none
         hover:bg-accent/10
         ${isActive 
           ? 'bg-primary/10 dark:bg-primary/5 text-primary font-medium border-l-2 border-primary' 

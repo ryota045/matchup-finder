@@ -117,20 +117,22 @@ export const getCharacterGroupedVideos = (
   
   // 選択されたキャラクターのアイコンを取得
   const selectedCharacterIcon = selectedCharacter ? 
-    characterIcons.find(c => c.eng.toLowerCase() === selectedCharacter.toLowerCase()) : null;
+    characterIcons.find(c => c.anotation.some(a => selectedCharacter.toLowerCase().includes(a.toLowerCase()))) : null;
   
   videos.forEach(video => {
     // 使用キャラクター（chara1）と対戦相手（chara2）のアイコンを取得
     // 完全一致で検索
     const useCharacter = characterIcons.find(c => 
-      c.eng.toLowerCase() === video.chara1.toLowerCase() || 
+      // c.eng.toLowerCase() === video.chara1.toLowerCase() || 
       c.anotation.some(a => a.toLowerCase() === video.chara1.toLowerCase())
     );
     
     const opponentCharacter = characterIcons.find(c => 
-      c.eng.toLowerCase() === video.chara2.toLowerCase() || 
+      // c.eng.toLowerCase() === video.chara2.toLowerCase() || 
       c.anotation.some(a => a.toLowerCase() === video.chara2.toLowerCase())
     );
+
+    // console.log("useCharacter", useCharacter);
     
     if (useCharacter && opponentCharacter) {
       // キャラクター名をアルファベット順にソートしてグループキーを作成
@@ -307,6 +309,7 @@ export const transformMatchupItemToMatchupVideo = (matchupItems: MatchupItem[]):
           Object.entries(item.content.matchups).forEach(([key, value]: [string, any]) => {
             if (value.url) {
               const timestamps: TimestampItem[] = [];
+              
               if (value.timestamps) {
                 Object.entries(value.timestamps).forEach(([time, data]: [string, any]) => {
                   if (typeof data === 'object' && data !== null) {
@@ -355,7 +358,8 @@ export const transformMatchupItemToMatchupVideo = (matchupItems: MatchupItem[]):
                 matchupKey: key,
                 directory: item.directory,
                 chara1: value.chara1 || '',
-                chara2: value.chara2 || ''
+                chara2: value.chara2 || '',
+                upload_date: value.upload_date || ''
               });
             }
           });
@@ -400,7 +404,8 @@ export const transformMatchupItemToMatchupVideo = (matchupItems: MatchupItem[]):
                 matchupKey: key,
                 directory: item.directory,
                 chara1: value.chara1 || '',
-                chara2: value.chara2 || ''
+                chara2: value.chara2 || '',
+                upload_date: value.upload_date || ''
               });
             }
           });
