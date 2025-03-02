@@ -132,7 +132,7 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
   };
   
   return (
-    <div className="border border-border rounded-md overflow-hidden mx-2 my-2">
+    <div className="border border-border rounded-md overflow-hidden mx-1 my-1">
       {/* アコーディオンヘッダー */}
       <button
         className="w-full flex items-center justify-between p-2 bg-muted/20 hover:bg-muted/40"
@@ -165,7 +165,7 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
           visibility: isExpanded ? 'visible' : 'hidden'
         }}
       >
-        <div ref={contentRef} className="space-y-1 p-2 overflow-y-auto max-h-[300px]">
+        <div ref={contentRef} className="space-y-1 p-2 overflow-y-auto custom-scrollbar max-h-[300px]">
           {renderVideoItems()}
         </div>
       </div>

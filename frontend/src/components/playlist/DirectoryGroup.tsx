@@ -122,7 +122,7 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
   };
 
   return (
-    <div className="mb-2 border border-border rounded-md overflow-hidden mx-2 my-2">
+    <div className="mb-2 border border-border rounded-md overflow-hidden custom-scrollbar mx-1 my-1">
       {/* ディレクトリアコーディオンヘッダー */}
       <button
         className="w-full flex items-center justify-between p-2 bg-muted/30 hover:bg-muted/50"
@@ -142,14 +142,14 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
       
       {/* ディレクトリアコーディオンコンテンツ */}
       <div 
-        className={`overflow-hidden transition-all ${isInitialRender ? '' : 'duration-300'} ease-in-out`}
+        className={`overflow-hidden transition-all custom-scrollbar ${isInitialRender ? '' : 'duration-300'} ease-in-out`}
         style={{ 
           maxHeight: isExpanded ? (typeof contentHeight === "number" ? `${contentHeight}px` : contentHeight) : "0px",
           opacity: isExpanded ? 1 : 0,
           visibility: isExpanded ? 'visible' : 'hidden'
         }}
       >
-        <div ref={contentRef} className="space-y-2 overflow-y-auto max-h-[400px]">
+        <div ref={contentRef} className="space-y-2 overflow-y-auto custom-scrollbar max-h-[400px]">
           {renderContent()}
         </div>
       </div>
