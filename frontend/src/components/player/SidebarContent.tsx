@@ -161,7 +161,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
     });
   });
 
-  console.log("selectedCharacter", selectedCharacter);
+  // console.log("selectedCharacter", selectedCharacter);
   
   return (
     <div className="w-full">
