@@ -104,7 +104,7 @@ const Playlist: React.FC<PlaylistProps> = ({
   
   return (
     <AnimatedAccordion
-      title={`プレイリスト (${videos.length})`}
+      title={`検索結果 (${videos.length})`}
       isOpen={isOpen}
       onToggle={setIsOpen}
       playerContainerRef={playerContainerRef as RefObject<HTMLDivElement | null>}
