@@ -26,23 +26,18 @@ export const searchMatchupVideos = (
   if (!hasUserCharacter || !hasOpponentCharacters) {
     return [];
   }
-
-  // console.log("entered searchMatchupVideos");
-  // console.log("matchupLists", matchupLists);
   
   const videos: MatchupVideo[] = [];
   
-  // キャラクターの組み合わせごとにタイムスタンプをまとめるためのマップ
-  const matchupMap: { [key: string]: MatchupVideo } = {};
-  
-  matchupLists.forEach(item => {
+  // 検出された動画をすべて個別に保存
+  matchupLists.forEach((item, itemIndex) => {
     const matchupData = item.content;
     
     // マッチアップデータの形式に合わせて処理
     if (matchupData && typeof matchupData === 'object') {
       // matchupsプロパティがある場合
       if (matchupData.matchups) {
-        Object.entries(matchupData.matchups).forEach(([key, value]: [string, any]) => {
+        Object.entries(matchupData.matchups).forEach(([key, value]: [string, any], valueIndex) => {
           // 条件チェック
           const userCharacterMatched = isUserCharacterMatched(
             value.chara1 || '',
@@ -63,35 +58,27 @@ export const searchMatchupVideos = (
               // タイムスタンプの抽出
               const { timestamps } = extractTimestampsFromVideo(value);
               
-              // マッチアップキーの生成
-              const matchupKey = createCharacterKey(value.chara1 || '', value.chara2 || '');
+              // マッチアップキーの生成（ディレクトリ、キャラクター、インデックスを含める）
+              const characterKey = createCharacterKey(value.chara1 || '', value.chara2 || '');
+              const videoId = extractVideoId(videoUrl);
               
-              // 既存のマッチアップがあるか確認
-              if (matchupMap[matchupKey]) {
-                // 既存のマッチアップにタイムスタンプを追加
-                matchupMap[matchupKey].timestamps = [
-                  ...matchupMap[matchupKey].timestamps,
-                  ...timestamps
-                ];
-              } else {
-                // 新しいマッチアップを作成
-                matchupMap[matchupKey] = {
-                  url: videoUrl,
-                  title: value.title || matchupData.title || '',
-                  timestamps,
-                  matchupKey,
-                  directory: item.directory,
-                  chara1: value.chara1 || '',
-                  chara2: value.chara2 || '',
-                  upload_date: value.upload_date || ''
-                };
-              }
+              // 新しいマッチアップを作成して直接配列に追加
+              videos.push({
+                url: videoUrl,
+                title: value.title || matchupData.title || '',
+                timestamps,
+                matchupKey: characterKey, // 元のキャラクターキーは保持
+                directory: item.directory,
+                chara1: value.chara1 || '',
+                chara2: value.chara2 || '',
+                upload_date: value.upload_date || ''
+              });
             }
           }
         });
       } else {
         // matchupsプロパティがない場合、直接オブジェクトをチェック
-        Object.entries(matchupData).forEach(([key, value]: [string, any]) => {
+        Object.entries(matchupData).forEach(([key, value]: [string, any], valueIndex) => {
           if (typeof value === 'object' && value !== null) {
             // 条件チェック
             const userCharacterMatched = isUserCharacterMatched(
@@ -165,29 +152,20 @@ export const searchMatchupVideos = (
                   // });
                 }
                 
-                // マッチアップキーの生成
-                const matchupKey = createCharacterKey(value.chara1 || '', value.chara2 || '');
+                // マッチアップキーの生成（キャラクターキーのみ）
+                const characterKey = createCharacterKey(value.chara1 || '', value.chara2 || '');
                 
-                // 既存のマッチアップがあるか確認
-                if (matchupMap[matchupKey]) {
-                  // 既存のマッチアップにタイムスタンプを追加
-                  matchupMap[matchupKey].timestamps = [
-                    ...matchupMap[matchupKey].timestamps,
-                    ...timestamps
-                  ];
-                } else {
-                  // 新しいマッチアップを作成
-                  matchupMap[matchupKey] = {
-                    url: videoUrl,
-                    title: value.video_title || key,
-                    timestamps,
-                    matchupKey,
-                    directory: item.directory,
-                    chara1: value.chara1 || '',
-                    chara2: value.chara2 || '',
-                    upload_date: value.upload_date || ''
-                  };
-                }
+                // 新しいマッチアップを作成して直接配列に追加
+                videos.push({
+                  url: videoUrl,
+                  title: value.video_title || key,
+                  timestamps,
+                  matchupKey: characterKey, // 元のキャラクターキーは保持
+                  directory: item.directory,
+                  chara1: value.chara1 || '',
+                  chara2: value.chara2 || '',
+                  upload_date: value.upload_date || ''
+                });
               }
             }
           }
@@ -196,10 +174,13 @@ export const searchMatchupVideos = (
     }
   });
   
-  // マップから配列に変換
-  const result = Object.values(matchupMap);
-  
-  // console.log("検索結果:", result);
-  
-  return result;
+  // 結果を返す（マップを使わずに直接配列を返す）
+  return videos;
+};
+
+// YouTubeのURLからビデオIDを抽出する関数
+const extractVideoId = (url: string): string | null => {
+  const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
+  const match = url.match(regExp);
+  return (match && match[2].length === 11) ? match[2] : null;
 }; 

@@ -117,20 +117,22 @@ export const getCharacterGroupedVideos = (
   
   // 選択されたキャラクターのアイコンを取得
   const selectedCharacterIcon = selectedCharacter ? 
-    characterIcons.find(c => c.eng.toLowerCase() === selectedCharacter.toLowerCase()) : null;
+    characterIcons.find(c => c.anotation.some(a => selectedCharacter.toLowerCase().includes(a.toLowerCase()))) : null;
   
   videos.forEach(video => {
     // 使用キャラクター（chara1）と対戦相手（chara2）のアイコンを取得
     // 完全一致で検索
     const useCharacter = characterIcons.find(c => 
-      c.eng.toLowerCase() === video.chara1.toLowerCase() || 
+      // c.eng.toLowerCase() === video.chara1.toLowerCase() || 
       c.anotation.some(a => a.toLowerCase() === video.chara1.toLowerCase())
     );
     
     const opponentCharacter = characterIcons.find(c => 
-      c.eng.toLowerCase() === video.chara2.toLowerCase() || 
+      // c.eng.toLowerCase() === video.chara2.toLowerCase() || 
       c.anotation.some(a => a.toLowerCase() === video.chara2.toLowerCase())
     );
+
+    // console.log("useCharacter", useCharacter);
     
     if (useCharacter && opponentCharacter) {
       // キャラクター名をアルファベット順にソートしてグループキーを作成
