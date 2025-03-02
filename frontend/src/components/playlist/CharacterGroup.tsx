@@ -121,6 +121,7 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
             // console.log('選択した動画:', video.title, video.directory, video.url);
             if (onVideoSelect && videoIndexInAllVideos !== -1) {
               setSelectedVideoIndex(videoIndex);
+              console.log("video.url", video.url);
               // onVideoSelect(videoIndexInAllVideos);
               onVideoSelect(video.url);
             }

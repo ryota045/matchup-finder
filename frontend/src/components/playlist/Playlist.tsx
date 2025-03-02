@@ -19,6 +19,7 @@ import AnimatedAccordion from '../ui/AnimatedAccordion';
  * @property {(videos: MatchupVideo[]) => Object} getCharacterGroupedVideos - 動画をキャラクターごとにグループ化する関数
  * @property {(isOpen: boolean) => void} setIsOpen - プレイリストの開閉状態を設定する関数
  * @property {RefObject<HTMLDivElement | null>} [playerContainerRef] - プレーヤーコンテナへの参照
+ * @property {string} [className] - 追加のCSSクラス名
  */
 interface PlaylistProps {
   videos: MatchupVideo[];
@@ -32,6 +33,7 @@ interface PlaylistProps {
   getCharacterGroupedVideos: (videos: MatchupVideo[]) => {[key: string]: {icon1: CharacterIcon | null, icon2: CharacterIcon | null, videos: MatchupVideo[]}};
   setIsOpen: (isOpen: boolean) => void;
   playerContainerRef?: RefObject<HTMLDivElement | null>;
+  className?: string;
 }
 
 /**
@@ -66,7 +68,8 @@ const Playlist: React.FC<PlaylistProps> = ({
   onVideoSelect,
   getCharacterGroupedVideos,
   setIsOpen,
-  playerContainerRef
+  playerContainerRef,
+  className = ""
 }) => {
   // 事前にコンテンツをレンダリングしておく
   const renderDirectoryGroups = () => {
@@ -101,6 +104,7 @@ const Playlist: React.FC<PlaylistProps> = ({
       isOpen={isOpen}
       onToggle={setIsOpen}
       playerContainerRef={playerContainerRef as RefObject<HTMLDivElement | null>}
+      className={className}
     >
       {renderDirectoryGroups()}
     </AnimatedAccordion>
