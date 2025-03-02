@@ -8,6 +8,30 @@ export default {
   ],
   darkMode: 'class',
   theme: {
+    screens: {
+      'xs': '480px',     // Extra small devices
+      'sm': '640px',     // Small devices (標準と同じ)
+      'md': '768px',     // Medium devices (標準と同じ)
+      'lg': '1024px',    // Large devices (標準と同じ)
+      'xl': '1280px',    // Extra large devices (標準と同じ)
+      '2xl': '1536px',   // 2X Extra large devices (標準と同じ)
+      '3xl': '1920px',   // 3X Extra large devices (新規追加)
+      '4xl': '2560px',   // 4K displays (新規追加)
+      'player-md': '1100px', // プレーヤー用のカスタムブレークポイント
+      'player-lg': '1400px', // プレーヤー用の大きめのブレークポイント
+    },
+    container: {
+      center: true,
+      padding: '1rem', // 必要に応じてパディングを設定
+      screens: {
+        sm: '1200px',        
+        xl: '1280px',
+        '2xl': '1536px',
+        // 各ブレークポイントごとにカスタムのmax-widthを設定
+        '3xl': '1920px',
+        '4xl': '2560px',
+      },
+    },
     extend: {
       colors: {
         background: "var(--background)",

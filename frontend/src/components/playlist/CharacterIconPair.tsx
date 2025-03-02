@@ -20,14 +20,17 @@ export interface CharacterIcon {
  * @interface CharacterIconPairProps
  * @property {CharacterIcon | null} icon1 - 1つ目のキャラクターアイコン
  * @property {CharacterIcon | null} icon2 - 2つ目のキャラクターアイコン
+ * @property {string} [useChara] - 使用キャラクター名（英語）。このキャラクターが左側に表示されます。
  */
 interface CharacterIconPairProps {
   icon1: CharacterIcon | null;
   icon2: CharacterIcon | null;
+  useChara?: string;
 }
 
 /**
  * 2つのキャラクターアイコンを並べて表示するコンポーネント
+ * 使用キャラクターが指定されている場合、そのキャラクターが左側に表示されます。
  * 
  * @component
  * @example
@@ -35,18 +38,43 @@ interface CharacterIconPairProps {
  * <CharacterIconPair
  *   icon1={ryuIcon}
  *   icon2={kenIcon}
+ *   useChara="ryu"
  * />
  * ```
  */
-const CharacterIconPair: React.FC<CharacterIconPairProps> = ({ icon1, icon2 }) => {
+const CharacterIconPair: React.FC<CharacterIconPairProps> = ({ icon1, icon2, useChara }) => {
+  // 使用キャラクターが指定されている場合、アイコンの順序を調整
+  let leftIcon = icon1;
+  let rightIcon = icon2;
+
+  if (useChara && icon1 && icon2) {
+    // デバッグ用ログ
+    // console.log('CharacterIconPair:', {
+    //   useChara,
+    //   icon1: icon1.eng,
+    //   icon2: icon2.eng,
+    //   match1: icon1.eng.toLowerCase() === useChara.toLowerCase(),
+    //   match2: icon2.eng.toLowerCase() === useChara.toLowerCase()
+    // });
+
+    // 使用キャラクターが2つ目のアイコンの場合、順序を入れ替える
+    if (icon2.eng.toLowerCase() === useChara.toLowerCase()) {
+      // console.log('Swapping icons: useChara matches icon2');
+      leftIcon = icon2;
+      rightIcon = icon1;
+    } else if (icon1.eng.toLowerCase() !== useChara.toLowerCase()) {
+      // console.log('Warning: useChara does not match either icon');
+    }
+  }
+
   return (
     <div className="flex items-center mr-2">
-      {/* 1つ目のアイコン */}
+      {/* 左側のアイコン（使用キャラクター優先） */}
       <div className="w-8 h-8 rounded-md overflow-hidden border border-border bg-card">
-        {icon1 ? (
+        {leftIcon ? (
           <img
-            src={icon1.path}
-            alt={icon1.jp || icon1.eng}
+            src={leftIcon.path}
+            alt={leftIcon.jp || leftIcon.eng}
             className="w-full h-full object-cover"
             loading="lazy"
           />
@@ -60,12 +88,12 @@ const CharacterIconPair: React.FC<CharacterIconPairProps> = ({ icon1, icon2 }) =
       {/* VS表示 */}
       <div className="mx-1 text-xs font-medium text-muted-foreground">VS</div>
       
-      {/* 2つ目のアイコン */}
+      {/* 右側のアイコン */}
       <div className="w-8 h-8 rounded-md overflow-hidden border border-border bg-card">
-        {icon2 ? (
+        {rightIcon ? (
           <img
-            src={icon2.path}
-            alt={icon2.jp || icon2.eng}
+            src={rightIcon.path}
+            alt={rightIcon.jp || rightIcon.eng}
             className="w-full h-full object-cover"
             loading="lazy"
           />

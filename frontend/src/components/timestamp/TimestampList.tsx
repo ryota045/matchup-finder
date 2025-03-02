@@ -1,7 +1,8 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import TimestampItemComponent, { TimestampItem } from './TimestampItem';
-import { Timestamp } from '../../types/timestamp';
+import React from 'react';
+import { TimestampItem } from './TimestampItem';
+import CharacterIconPair, { CharacterIcon } from '../playlist/CharacterIconPair';
+import { characterIcons } from '../../data/characterData';
+import { formatTime } from '../../utils/YouTubeUtils';
 
 /**
  * タイムスタンプリストのプロパティ
@@ -9,13 +10,12 @@ import { Timestamp } from '../../types/timestamp';
  * @property {TimestampItem[]} timestamps - タイムスタンプのリスト
  * @property {number} [currentTime=0] - 現在の再生時間（秒）
  * @property {(time: number) => void} onTimestampClick - タイムスタンプがクリックされたときのコールバック関数
- * @property {boolean} [isOpen=true] - リストが開いているかどうか
  */
 interface TimestampListProps {
   timestamps: TimestampItem[];
-  currentTime?: number;
   onTimestampClick: (time: number) => void;
-  isOpen?: boolean;
+  currentTime?: number;
+  selectedCharacter?: string;
 }
 
 /**
@@ -31,148 +31,74 @@ interface TimestampListProps {
  *   ]}
  *   currentTime={15}
  *   onTimestampClick={handleTimestampClick}
- *   isOpen={true}
  * />
  * ```
  */
 const TimestampList: React.FC<TimestampListProps> = ({
   timestamps,
-  currentTime = 0,
   onTimestampClick,
-  isOpen = true
+  currentTime = 0,
+  selectedCharacter,
 }) => {
-  const contentRef = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState<number | "auto">("auto");
-
-  // コンテンツの高さを計算
-  useEffect(() => {
-    if (contentRef.current) {
-      const resizeObserver = new ResizeObserver((entries) => {
-        for (const entry of entries) {
-          setHeight(entry.contentRect.height);
-        }
-      });
-
-      resizeObserver.observe(contentRef.current);
-      return () => {
-        if (contentRef.current) {
-          resizeObserver.unobserve(contentRef.current);
-        }
-      };
-    }
-  }, []);
-
-  // ウィンドウのリサイズ時にも高さを再計算
-  useEffect(() => {
-    const handleResize = () => {
-      if (contentRef.current) {
-        setHeight(contentRef.current.scrollHeight);
-      }
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
-
-  // 現在の再生時間に最も近いタイムスタンプを見つける
-  const findActiveTimestamp = () => {
-    if (!timestamps.length) return -1;
-    
-    let activeIndex = -1;
-    let minDiff = Number.MAX_SAFE_INTEGER;
-    
-    timestamps.forEach((timestamp, index) => {
-      // 現在の再生時間以下で最も近いタイムスタンプを選択
-      if (timestamp.time <= currentTime) {
-        const diff = currentTime - timestamp.time;
-        if (diff < minDiff) {
-          minDiff = diff;
-          activeIndex = index;
-        }
-      }
-    });
-    
-    return activeIndex;
-  };
-  
-  const activeIndex = findActiveTimestamp();
-
-  // タイムスタンプをビデオタイトルでグループ化
-  const groupedByTitle: { [title: string]: TimestampItem[] } = {};
-  timestamps.forEach(timestamp => {
-    const title = timestamp.videoTitle || '不明な動画';
-    if (!groupedByTitle[title]) {
-      groupedByTitle[title] = [];
-    }
-    groupedByTitle[title].push(timestamp);
-  });
-
-  // タイムスタンプがない場合は、デフォルトのタイムスタンプを作成
-  if (timestamps.length === 0) {
-    return (
-      <AnimatePresence initial={false}>
-        {isOpen && (
-          <motion.div
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ 
-              height: height !== "auto" ? height : "auto",
-              opacity: 1
-            }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeInOut" }}
-            className="overflow-hidden bg-card dark:bg-card/90"
-          >
-            <div ref={contentRef} className="p-2">
-              <div className="p-4 text-center text-muted-foreground">
-                タイムスタンプがありません
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+  /**
+   * タイムスタンプのキャラクターアイコンを取得する関数
+   * @param chara1 1人目のキャラクター名
+   * @param chara2 2人目のキャラクター名
+   * @returns キャラクターアイコンのペア
+   */
+  const getCharacterIcons = (chara1: string, chara2: string) => {
+    const character1 = characterIcons.find(c => 
+      c.anotation.some(a => chara1.toLowerCase().includes(a.toLowerCase()))
     );
-  }
+    const character2 = characterIcons.find(c => 
+      c.anotation.some(a => chara2.toLowerCase().includes(a.toLowerCase()))
+    );
+    
+    // 選択されたキャラクターのアイコンを取得
+    const selectedCharacterIcon = selectedCharacter ? 
+      characterIcons.find(c => c.eng.toLowerCase() === selectedCharacter.toLowerCase()) : null;
+    
+    // 選択されたキャラクターが存在し、character2と一致する場合はswapする
+    if (selectedCharacterIcon && character2 && 
+        selectedCharacterIcon.eng === character2.eng && 
+        character1) {
+      // character1とcharacter2を入れ替える
+      return { icon1: character2, icon2: character1 };
+    }
+    
+    return { icon1: character1 || null, icon2: character2 || null };
+  };
 
   return (
-    <AnimatePresence initial={false}>
-      {isOpen && (
-        <motion.div
-          initial={{ height: 0, opacity: 0 }}
-          animate={{ 
-            height: height !== "auto" ? height : "auto",
-            opacity: 1
-          }}
-          exit={{ height: 0, opacity: 0 }}
-          transition={{ duration: 0.3, ease: "easeInOut" }}
-          className="overflow-hidden bg-card dark:bg-card/90"
-        >
-          <div ref={contentRef} className="p-2">
-            <div className="timestamp-list divide-y divide-border">
-              {Object.entries(groupedByTitle).map(([title, items]) => (
-                <div key={title} className="py-2">
-                  <h3 className="text-sm font-medium px-2 py-1 bg-muted/10 rounded mb-1">{title}</h3>
-                  <ul>
-                    {items.map((timestamp, index) => (
-                      <TimestampItemComponent
-                        key={`${timestamp.time}-${timestamp.label || "タイムスタンプ"}-${index}`}
-                        timestamp={{
-                          ...timestamp,
-                          label: timestamp.label || "タイムスタンプ"
-                        }}
-                        isActive={timestamps.indexOf(timestamp) === activeIndex}
-                        onClick={onTimestampClick}
-                      />
-                    ))}
-                  </ul>
+    <div className="timestamp-list-container bg-card dark:bg-card/95 border-border dark:border-gray-800">
+      <div className="p-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
+        {timestamps.map((timestamp, index) => (
+          <div 
+            key={`timestamp-${index}`}
+            className={`
+              p-2 rounded cursor-pointer hover:bg-accent/10
+              ${timestamp.time === currentTime ? 'bg-primary/10 dark:bg-primary/5 text-primary font-medium border-l-2 border-primary' : ''}
+            `}
+            onClick={() => onTimestampClick(timestamp.time)}
+          >
+            <div className="flex items-center">
+              <span className="inline-block w-16 text-sm font-mono text-muted-foreground bg-muted/20 dark:bg-muted/10 rounded px-1 py-0.5 text-center">
+                {timestamp.originalDetectTime || formatTime(timestamp.time)}
+              </span>
+              
+              {/* キャラクターアイコンを表示 */}
+              {timestamp.chara1 && timestamp.chara2 && (
+                <div className="flex-shrink-0 ml-2">
+                  <CharacterIconPair 
+                    {...getCharacterIcons(timestamp.chara1, timestamp.chara2)} 
+                  />
                 </div>
-              ))}
+              )}                          
             </div>
           </div>
-        </motion.div>
-      )}
-    </AnimatePresence>
+        ))}
+      </div>
+    </div>
   );
 };
 

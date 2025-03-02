@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import CharacterGroup from './CharacterGroup';
 import { MatchupVideo } from './VideoItem';
 import { CharacterIcon } from './CharacterIconPair';
@@ -23,8 +23,7 @@ interface DirectoryGroupProps {
   toggleDirectoryAccordion: () => void;
   expandedGroups: {[key: string]: boolean};
   toggleAccordion: (directory: string, charKey: string) => void;
-  selectedVideoIndex: number;
-  onVideoSelect: (index: number) => void;
+  onVideoSelect: (url: string) => void;
   getCharacterGroupedVideos: (videos: MatchupVideo[]) => {[key: string]: {icon1: CharacterIcon | null, icon2: CharacterIcon | null, videos: MatchupVideo[]}};
 }
 
@@ -54,12 +53,76 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
   toggleDirectoryAccordion,
   expandedGroups,
   toggleAccordion,
-  selectedVideoIndex,
   onVideoSelect,
   getCharacterGroupedVideos
 }) => {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
+  const [isInitialRender, setIsInitialRender] = useState(true);
+
+  // コンテンツの高さを再計算する関数
+  const updateContentHeight = () => {
+    if (contentRef.current && isExpanded) {
+      // 最大高さを300pxに制限
+      const calculatedHeight = Math.min(contentRef.current.scrollHeight, 400);
+      setContentHeight(calculatedHeight);
+    }
+  };
+
+  // 初回レンダリング後にフラグを更新
+  useEffect(() => {
+    if (isInitialRender) {
+      setIsInitialRender(false);
+    }
+  }, []);
+
+  // ディレクトリが展開されたとき、または内部のグループの展開状態が変わったときに高さを更新
+  useEffect(() => {
+    updateContentHeight();
+  }, [isExpanded, expandedGroups]);
+
+  // ResizeObserverを使用してコンテンツの高さ変更を監視
+  useEffect(() => {
+    if (!contentRef.current || !isExpanded) return;
+
+    const resizeObserver = new ResizeObserver(() => {
+      updateContentHeight();
+    });
+
+    resizeObserver.observe(contentRef.current);
+
+    return () => {
+      if (contentRef.current) {
+        resizeObserver.unobserve(contentRef.current);
+      }
+    };
+  }, [isExpanded]);
+
+  // 事前にコンテンツをレンダリングしておく
+  const renderContent = () => {
+    return Object.entries(getCharacterGroupedVideos(videos)).map(([charKey, group]) => {
+      // ディレクトリとキャラクターの組み合わせでユニークなキーを作成
+      const uniqueKey = `${directory}-${charKey}`;
+      const isGroupExpanded = expandedGroups[uniqueKey] || false;
+      
+      return (
+        <CharacterGroup
+          key={`${directory}-${charKey}`}
+          charKey={charKey}
+          directory={directory}
+          group={group}
+          isExpanded={isGroupExpanded}
+          toggleAccordion={toggleAccordion}
+          videos={videos}
+          onVideoSelect={onVideoSelect}
+          onHeightChange={updateContentHeight}
+        />
+      );
+    });
+  };
+
   return (
-    <div className="mb-2 border border-border rounded-md overflow-hidden mx-2 my-2">
+    <div className="mb-2 border border-border rounded-md overflow-hidden custom-scrollbar mx-1 my-1">
       {/* ディレクトリアコーディオンヘッダー */}
       <button
         className="w-full flex items-center justify-between p-2 bg-muted/30 hover:bg-muted/50"
@@ -79,30 +142,15 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
       
       {/* ディレクトリアコーディオンコンテンツ */}
       <div 
-        className={`transition-all duration-300 ease-in-out overflow-y-auto ${
-          isExpanded ? 'max-h-[300px] opacity-100' : 'max-h-0 opacity-0'
-        }`}
+        className={`overflow-hidden transition-all custom-scrollbar ${isInitialRender ? '' : 'duration-300'} ease-in-out`}
+        style={{ 
+          maxHeight: isExpanded ? (typeof contentHeight === "number" ? `${contentHeight}px` : contentHeight) : "0px",
+          opacity: isExpanded ? 1 : 0,
+          visibility: isExpanded ? 'visible' : 'hidden'
+        }}
       >
-        <div className="space-y-2">
-          {Object.entries(getCharacterGroupedVideos(videos)).map(([charKey, group]) => {
-            // ディレクトリとキャラクターの組み合わせでユニークなキーを作成
-            const uniqueKey = `${directory}-${charKey}`;
-            const isGroupExpanded = expandedGroups[uniqueKey] || false;
-            
-            return (
-              <CharacterGroup
-                key={`${directory}-${charKey}`}
-                charKey={charKey}
-                directory={directory}
-                group={group}
-                isExpanded={isGroupExpanded}
-                toggleAccordion={toggleAccordion}
-                videos={videos}
-                selectedVideoIndex={selectedVideoIndex}
-                onVideoSelect={onVideoSelect}
-              />
-            );
-          })}
+        <div ref={contentRef} className="space-y-2 overflow-y-auto custom-scrollbar max-h-[400px]">
+          {renderContent()}
         </div>
       </div>
     </div>

@@ -1,18 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { createEmbedUrl } from '../utils/YouTubeUtils';
+import { createEmbedUrl } from '../../utils/YouTubeUtils';
 
 /**
  * YouTubeプレーヤーコンポーネントのプロパティ
  * @interface YouTubePlayerProps
  * @property {string} url - YouTube動画のURL
- * @property {number|string} [width='100%'] - プレーヤーの幅
- * @property {number|string} [height='100%'] - プレーヤーの高さ
  * @property {boolean} [autoplay=false] - 自動再生するかどうか
  */
 interface YouTubePlayerProps {
   url: string;
-  width?: number | string;
-  height?: number | string;
   autoplay?: boolean;
 }
 
@@ -32,15 +28,13 @@ interface YouTubePlayerProps {
  */
 const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   url,
-  width = '100%',
-  height = '100%',
   autoplay = false,
 }) => {
   const [embedUrl, setEmbedUrl] = useState<string>('');
 
   // URLが変更されたときに埋め込みURLを更新
   useEffect(() => {
-    console.log('YouTubePlayer: URLが更新されました', url);
+    // console.log('YouTubePlayer: URLが更新されました', url);
     const newEmbedUrl = createEmbedUrl(url, autoplay);
     setEmbedUrl(newEmbedUrl);
   }, [url, autoplay]);
