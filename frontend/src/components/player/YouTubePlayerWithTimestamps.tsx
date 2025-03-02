@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { extractVideoId } from '../../utils/YouTubeUtils';
+import { extractTimestampFromUrl, extractVideoId } from '../../utils/YouTubeUtils';
 import { MatchupVideo } from '../playlist/VideoItem';
 import { CharacterIcon } from '../playlist/CharacterIconPair';
 import PlayerControls from './PlayerControls';
@@ -40,6 +40,8 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   const [currentUrl, setCurrentUrl] = useState('');
   const [currentTime, setCurrentTime] = useState(0);
   const [currentVideo, setCurrentVideo] = useState<MatchupVideo | null>(null);
+  // プレイリスト全体で共有する選択状態
+  const [selectedVideoUrl, setSelectedVideoUrl] = useState<string>('');
 
   // プレイリストとタイムスタンプの開閉状態を管理
   const [isPlaylistOpen, setIsPlaylistOpen] = useState(true); // 初期状態でプレイリストを開く
@@ -134,6 +136,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
     if (!hasRequiredCharacters) {
       setCurrentUrl('');
       setCurrentVideo(null);
+      setSelectedVideoUrl('');
       return;
     }
     
@@ -141,6 +144,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
     // ユーザーがプレイリストから選択するまで待機
     setCurrentUrl('');
     setCurrentVideo(null);
+    setSelectedVideoUrl('');
   }, [videos, allVideos, hasRequiredCharacters]);
 
   // URLが変更されたときに対応する動画情報を更新
@@ -174,7 +178,10 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
     
     // 新しいURLを生成（タイムスタンプ付き、自動再生有効）
     const newUrl = `https://www.youtube.com/watch?v=${videoId}&t=${time}`;
+    // console.log("newUrl", newUrl);
     setCurrentUrl(newUrl);
+    
+    // 現在の再生時間を即座に更新
     setCurrentTime(time);
     
     // 現在の動画情報は維持（URLが変わっても同じ動画なので）
@@ -189,6 +196,11 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
     // 選択された動画のURLを直接設定
     if (url) {
       setCurrentUrl(url);
+      setSelectedVideoUrl(url); // 選択された動画のURLを保存
+
+      // url からtimestampを取得
+      const timestamp = extractTimestampFromUrl(url);
+      setCurrentTime(timestamp || 0);
       
       // URLに一致する動画を検索
       const foundVideo = [...videos, ...allVideos].find(video => video.url === url);
@@ -221,6 +233,15 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   // グループ化された動画
   const groupedVideosByDirectory = groupVideosByDirectory(videos);
 
+  /**
+   * 再生時間が更新されたときの処理
+   * @param time 現在の再生時間（秒）
+   */
+  const handleTimeUpdate = (time: number) => {
+    setCurrentTime(time);
+    // console.log("YouTubePlayerWithTimestamps: 再生時間が更新されました", time);
+  };
+
   return (
     <div className="container flex flex-col player-md:flex-row gap-4 justify-center w-full mx-auto md:px-4">
       <div className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border border-border dark:border-gray-800 p-4 w-full player-md:w-3/4 player-lg:w-4/5">
@@ -237,6 +258,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
           playerContainerRef={playerContainerRef}
           isSelectedCharacter={isSelectedCharacter}
           isSelectedOpponentCharacters={isSelectedOpponentCharacters}
+          onTimeUpdate={handleTimeUpdate}
         />
       </div>
       
@@ -269,6 +291,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
           toggleAccordion={toggleAccordion}
           groupedVideos={groupedVideosByDirectory}
           getCharacterGroupedVideos={(videos) => getCharacterGroupedVideos(videos, selectedCharacter)}
+          selectedVideoUrl={selectedVideoUrl} // 選択された動画のURLを渡す
         />
       </div>
     </div>
