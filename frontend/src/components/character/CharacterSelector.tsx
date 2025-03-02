@@ -88,7 +88,9 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
               }
               return char;
             });
-            onMultipleCharactersSelect(anotationValues);
+            // 各要素が文字列であることを確認
+            const safeValues = anotationValues.map(val => String(val));
+            onMultipleCharactersSelect(safeValues);
           }, 0);
         }
         return newSelection;
@@ -106,7 +108,9 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
               }
               return char;
             });
-            onMultipleCharactersSelect(anotationValues);
+            // 各要素が文字列であることを確認
+            const safeValues = anotationValues.map(val => String(val));
+            onMultipleCharactersSelect(safeValues);
           }, 0);
         }
         return newSelection;
@@ -137,6 +141,7 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
     if (onMultipleCharactersSelect) {
       // レンダリング後に実行するようにする
       setTimeout(() => {
+        // 空の文字列配列を渡す
         onMultipleCharactersSelect([]);
       }, 0);
     }

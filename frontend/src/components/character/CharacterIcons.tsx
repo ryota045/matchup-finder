@@ -16,7 +16,7 @@ const CharacterIcons: React.FC<CharacterIconProps> = ({
     <div className="bg-card/95 rounded-lg">
       <div className="max-w-full mx-auto">
         <div className="overflow-x-auto">
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-8 lg:grid-cols-9 xl:grid-cols-12 gap-2 min-w-fit">
+          <div className="grid grid-cols-4 xs:grid-cols-6 sm:grid-cols-8 md:grid-cols-8 lg:grid-cols-9 xl:grid-cols-12 gap-2 min-w-fit">
             {icons.map((icon: CharacterIcon) => {
               const isSelected = selectedCharacters.includes(icon.eng);
               return (
