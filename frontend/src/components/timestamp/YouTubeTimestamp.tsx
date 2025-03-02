@@ -23,6 +23,8 @@ import AnimatedAccordion from '../ui/AnimatedAccordion';
  * @property {(isOpen: boolean) => void} [setIsPlaylistOpen] - プレイリストの開閉状態を設定する関数
  * @property {RefObject<HTMLDivElement | null>} [playerContainerRef] - プレーヤーコンテナへの参照
  * @property {string} [selectedCharacter] - 選択されたキャラクター名（英語）
+ * @property {'playlist' | 'timestamp'} [activeTab='playlist'] - モバイル表示時のアクティブなタブ
+ * @property {boolean} [independentMode=false] - 横並び表示時に片方が開いても他方が閉じないモード
  */
 interface YouTubeTimestampProps {
   // timestamps: TimestampItem[];
@@ -38,6 +40,8 @@ interface YouTubeTimestampProps {
   setIsPlaylistOpen?: (isOpen: boolean) => void;
   playerContainerRef?: RefObject<HTMLDivElement | null>;
   selectedCharacter?: string;
+  activeTab?: 'playlist' | 'timestamp';
+  independentMode?: boolean;
 }
 
 /**
@@ -71,7 +75,9 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
   isPlaylistOpen = true,
   setIsPlaylistOpen,
   playerContainerRef,
-  selectedCharacter
+  selectedCharacter,
+  activeTab = 'playlist',
+  independentMode = false
 }) => {
   // console.log("allVideos", allVideos);
   // console.log("videos", videos);
@@ -293,13 +299,13 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
     });
     
     // デバッグ用ログ
-    console.log('Generated character groups:', Object.entries(charGroups).map(([key, group]) => ({
-      key,
-      useChara: group.useChara,
-      icon1: group.icon1?.eng,
-      icon2: group.icon2?.eng,
-      videosCount: group.videos.length
-    })));
+    // console.log('Generated character groups:', Object.entries(charGroups).map(([key, group]) => ({
+    //   key,
+    //   useChara: group.useChara,
+    //   icon1: group.icon1?.eng,
+    //   icon2: group.icon2?.eng,
+    //   videosCount: group.videos.length
+    // })));
     
     return charGroups;
   };
@@ -330,7 +336,7 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
   };
 
   // キャラクターが選択されていない場合はメッセージを表示
-  if (!selectedCharacter) {
+  if (!selectedCharacter || videos.length === 0) {
     return (
       <div className="youtube-timestamp" style={{ position: 'relative' }}>
         <div className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border border-border dark:border-gray-800 p-6 mb-4">
@@ -357,15 +363,15 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
           if (setIsOpen) {
             setIsOpen(isOpen);
           }
-          // プレイリストを閉じる
-          if (isOpen) {
+          // プレイリストを閉じる（独立モードでない場合のみ）
+          if (isOpen && !independentMode) {
             setInternalIsPlaylistOpen(false);
             if (setIsPlaylistOpen) {
               setIsPlaylistOpen(false);
             }
           }
         }}
-        className="mb-4"
+        className={`mb-4 player-md:block ${activeTab === 'timestamp' ? 'block' : 'hidden sm:block'}`}
         contentClassName="px-4"
         playerContainerRef={playerContainerRef}
       >
@@ -392,8 +398,8 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
           if (setIsPlaylistOpen) {
             setIsPlaylistOpen(newIsOpen);
           }
-          // タイムスタンプを閉じる
-          if (newIsOpen) {
+          // タイムスタンプを閉じる（独立モードでない場合のみ）
+          if (newIsOpen && !independentMode) {
             setInternalIsOpen(false);
             if (setIsOpen) {
               setIsOpen(false);
@@ -401,6 +407,7 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
           }
         }}
         playerContainerRef={playerContainerRef}
+        className={`player-md:block ${activeTab === 'playlist' ? 'block' : 'hidden sm:block'}`}
       />
     </div>
   );
