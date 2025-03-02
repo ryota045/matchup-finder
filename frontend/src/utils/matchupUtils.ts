@@ -82,147 +82,29 @@ export const searchMatchupVideos = (
                   matchupKey,
                   directory: item.directory,
                   chara1: value.chara1 || '',
-                  chara2: value.chara2 || ''
+                  chara2: value.chara2 || '',
+                  upload_date: value.upload_date || ''
                 };
               }
             }
           }
         });
       } else {
-        // Object.entries(matchupData).forEach(([key, value]: [string, any]) => {
-        // // 直接プロパティがある場合
-        // const userCharacterMatched = isUserCharacterMatched(
-        //   matchupData.chara1 || '',
-        //   matchupData.chara2 || '',
-        //   selectedCharacter
-        // );
-        
-        // const opponentCharactersMatched = isOpponentCharactersMatched(
-        //   matchupData.chara1 || '',
-        //   matchupData.chara2 || '',
-        //   selectedCharacters
-        // );
-        
-        // // 両方の条件を満たす場合のみ追加
-        // if (userCharacterMatched && opponentCharactersMatched) {
-        //   const videoUrl = matchupData.url || '';
-        //   if (videoUrl) {
-        //     // タイムスタンプの抽出
-        //     const { timestamps } = extractTimestampsFromVideo(matchupData);
-            
-        //     // マッチアップキーの生成
-        //     const matchupKey = createCharacterKey(matchupData.chara1 || '', matchupData.chara2 || '');
-            
-        //     // 既存のマッチアップがあるか確認
-        //     if (matchupMap[matchupKey]) {
-        //       // 既存のマッチアップにタイムスタンプを追加
-        //       matchupMap[matchupKey].timestamps = [
-        //         ...matchupMap[matchupKey].timestamps,
-        //         ...timestamps
-        //       ];
-        //     } else {
-        //       // 新しいマッチアップを作成
-        //       matchupMap[matchupKey] = {
-        //         url: videoUrl,
-        //         title: matchupData.title || '',
-        //         timestamps,
-        //         matchupKey,
-        //         directory: item.directory,
-        //         chara1: matchupData.chara1 || '',
-        //         chara2: matchupData.chara2 || ''
-        //       };
-        //     }
-        //     }
-          // }
-        // });
+        // matchupsプロパティがない場合、直接オブジェクトをチェック
         Object.entries(matchupData).forEach(([key, value]: [string, any]) => {
           if (typeof value === 'object' && value !== null) {
-            // console.log(`キー: ${key}`, value);
+            // 条件チェック
+            const userCharacterMatched = isUserCharacterMatched(
+              value.chara1 || '',
+              value.chara2 || '',
+              selectedCharacter
+            );
             
-            // 条件チェック用の変数
-            let userCharacterMatched = !hasUserCharacter; // 使用キャラクター条件がない場合はtrueとする
-            let opponentCharactersMatched = !hasOpponentCharacters; // 対戦キャラクター条件がない場合はtrueとする
-            
-            // 使用キャラクターのチェック
-            if (hasUserCharacter) {
-              const chara1 = value.chara1 || '';
-              const chara2 = value.chara2 || '';
-              
-              // カンマ区切りのanotation値を配列に分割
-              const anotations = selectedCharacter.split(',');
-              
-              // いずれかのanotation値がchara1またはchara2に含まれているかチェック
-              userCharacterMatched = anotations.some(anotation => {
-                // 単語境界でのマッチをチェック
-                const regex = new RegExp(`\\b${anotation.toLowerCase()}\\b`);
-                
-                // 自分対自分の場合（例：RyuvsRyu）は、両方のキャラクターが同じ場合のみマッチさせる
-                if (chara1.toLowerCase() === chara2.toLowerCase()) {
-                  // 選択したキャラクターも同じキャラクターの場合のみマッチ
-                  return anotations.length === 1 && regex.test(chara1.toLowerCase());
-                }
-                
-                // 選択したキャラクターが1つだけで、それが自分対自分の検索の場合
-                if (anotations.length === 1 && anotation.toLowerCase() === anotation.toLowerCase()) {
-                  // 選択したキャラクターが自分対自分の検索の場合は、
-                  // 対戦相手が同じキャラクターの場合のみマッチさせる
-                  const isCharaSelfMatch = chara1.toLowerCase() === chara2.toLowerCase() && 
-                                          regex.test(chara1.toLowerCase());
-                  
-                  // 自分対自分の検索でない場合は通常のマッチング
-                  const isNormalMatch = chara1.toLowerCase() !== chara2.toLowerCase() && 
-                                       (regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase()));
-                  
-                  return isCharaSelfMatch || isNormalMatch;
-                }
-                
-                return regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase());
-              });
-              
-              // console.log(`使用キャラクターチェック: [${anotations.join(', ')}] in ${chara1} or ${chara2} = ${userCharacterMatched}`);
-            }
-            
-            // 対戦キャラクターのチェック
-            if (hasOpponentCharacters) {
-              const chara1 = value.chara1 || '';
-              const chara2 = value.chara2 || '';
-              
-              // 各対戦キャラクターについて、いずれかのanotation値がchara1またはchara2に含まれているかチェック
-              // OR条件: 選択したキャラクターのいずれか1つでも一致すればtrue
-              opponentCharactersMatched = selectedCharacters.some(char => {
-                // カンマ区切りのanotation値を配列に分割
-                const anotations = char.split(',');
-                
-                return anotations.some(anotation => {
-                  // 単語境界でのマッチをチェック
-                  const regex = new RegExp(`\\b${anotation.toLowerCase()}\\b`);
-                  
-                  // 自分対自分の場合（例：RyuvsRyu）は、両方のキャラクターが同じ場合のみマッチさせる
-                  if (chara1.toLowerCase() === chara2.toLowerCase()) {
-                    // 選択したキャラクターも同じキャラクターの場合のみマッチ
-                    return anotations.length === 1 && regex.test(chara1.toLowerCase());
-                  }
-                  
-                  // 選択したキャラクターが1つだけで、それが自分対自分の検索の場合
-                  if (anotations.length === 1 && anotation.toLowerCase() === anotation.toLowerCase()) {
-                    // 選択したキャラクターが自分対自分の検索の場合は、
-                    // 対戦相手が同じキャラクターの場合のみマッチさせる
-                    const isCharaSelfMatch = chara1.toLowerCase() === chara2.toLowerCase() && 
-                                            regex.test(chara1.toLowerCase());
-                    
-                    // 自分対自分の検索でない場合は通常のマッチング
-                    const isNormalMatch = chara1.toLowerCase() !== chara2.toLowerCase() && 
-                                         (regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase()));
-                    
-                    return isCharaSelfMatch || isNormalMatch;
-                  }
-                  
-                  return regex.test(chara1.toLowerCase()) || regex.test(chara2.toLowerCase());
-                });
-              });
-              
-              // console.log(`対戦キャラクターチェック(OR条件): ${selectedCharacters.join(', ')} in ${chara1} or ${chara2} = ${opponentCharactersMatched}`);
-            }
+            const opponentCharactersMatched = isOpponentCharactersMatched(
+              value.chara1 || '',
+              value.chara2 || '',
+              selectedCharacters
+            );
             
             // 両方の条件を満たす場合のみ追加
             if (userCharacterMatched && opponentCharactersMatched) {
@@ -283,29 +165,27 @@ export const searchMatchupVideos = (
                   // });
                 }
                 
-                // キャラクターの組み合わせを特定するキーを作成
-                const chara1 = value.chara1 || '';
-                const chara2 = value.chara2 || '';
-                // URLも含めたユニークなキーを作成（同じキャラクター組み合わせでも異なる動画は別々に表示）
-                const matchupCombinationKey = `${chara1}-${chara2}-${videoUrl}`;
+                // マッチアップキーの生成
+                const matchupKey = createCharacterKey(value.chara1 || '', value.chara2 || '');
                 
-                // 既存の同じ組み合わせがあればタイムスタンプを追加、なければ新規作成
-                if (matchupMap[matchupCombinationKey]) {
-                  // 既存のエントリにタイムスタンプを追加
-                  matchupMap[matchupCombinationKey].timestamps = [
-                    ...matchupMap[matchupCombinationKey].timestamps,
-                    ...timestamps,
+                // 既存のマッチアップがあるか確認
+                if (matchupMap[matchupKey]) {
+                  // 既存のマッチアップにタイムスタンプを追加
+                  matchupMap[matchupKey].timestamps = [
+                    ...matchupMap[matchupKey].timestamps,
+                    ...timestamps
                   ];
                 } else {
-                  // 新しいエントリを作成
-                  matchupMap[matchupCombinationKey] = {
+                  // 新しいマッチアップを作成
+                  matchupMap[matchupKey] = {
                     url: videoUrl,
-                    timestamps,
                     title: value.video_title || key,
-                    matchupKey: key,
+                    timestamps,
+                    matchupKey,
                     directory: item.directory,
-                    chara1,
-                    chara2
+                    chara1: value.chara1 || '',
+                    chara2: value.chara2 || '',
+                    upload_date: value.upload_date || ''
                   };
                 }
               }
@@ -317,31 +197,9 @@ export const searchMatchupVideos = (
   });
   
   // マップから配列に変換
-  const combinedVideos = Object.values(matchupMap);
+  const result = Object.values(matchupMap);
   
-  // console.log('検索結果（組み合わせ後）:', combinedVideos.length, '件の動画が見つかりました');
+  // console.log("検索結果:", result);
   
-  // 動画をソート（ディレクトリ名でソート）
-  combinedVideos.sort((a, b) => a.directory.localeCompare(b.directory));
-  
-  // ディレクトリごとにグループ化
-  const grouped: {[key: string]: MatchupVideo[]} = {};
-  combinedVideos.forEach(video => {
-    if (!grouped[video.directory]) {
-      grouped[video.directory] = [];
-    }
-    grouped[video.directory].push(video);
-  });
-  
-  
-  // console.log("combinedVideos", combinedVideos);
-
-  // console.log("matchupMap", matchupMap);
-  
-  // マッチアップマップから動画リストを作成
-  Object.values(combinedVideos).forEach(video => {
-    videos.push(video);
-  });
-  
-  return videos;
+  return result;
 }; 

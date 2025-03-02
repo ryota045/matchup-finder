@@ -307,6 +307,7 @@ export const transformMatchupItemToMatchupVideo = (matchupItems: MatchupItem[]):
           Object.entries(item.content.matchups).forEach(([key, value]: [string, any]) => {
             if (value.url) {
               const timestamps: TimestampItem[] = [];
+              
               if (value.timestamps) {
                 Object.entries(value.timestamps).forEach(([time, data]: [string, any]) => {
                   if (typeof data === 'object' && data !== null) {
@@ -355,7 +356,8 @@ export const transformMatchupItemToMatchupVideo = (matchupItems: MatchupItem[]):
                 matchupKey: key,
                 directory: item.directory,
                 chara1: value.chara1 || '',
-                chara2: value.chara2 || ''
+                chara2: value.chara2 || '',
+                upload_date: value.upload_date || ''
               });
             }
           });
@@ -400,7 +402,8 @@ export const transformMatchupItemToMatchupVideo = (matchupItems: MatchupItem[]):
                 matchupKey: key,
                 directory: item.directory,
                 chara1: value.chara1 || '',
-                chara2: value.chara2 || ''
+                chara2: value.chara2 || '',
+                upload_date: value.upload_date || ''
               });
             }
           });

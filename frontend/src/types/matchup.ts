@@ -35,6 +35,7 @@ export interface MatchupVideo {
   matchupKey: string;
   directory: string;
   timestamps: TimestampItem[];
+  upload_date?: string; // 動画のアップロード日
 }
 
 /**

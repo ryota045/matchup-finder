@@ -1,23 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { extractVideoId } from '../../utils/YouTubeUtils';
 import { MatchupVideo } from '../playlist/VideoItem';
-import { groupVideosByDirectory, getCharacterGroupedVideos } from '../../utils/videoUtils';
+import { CharacterIcon } from '../playlist/CharacterIconPair';
 import PlayerControls from './PlayerControls';
 import PlayerContent from './PlayerContent';
 import MobileTabControls from './MobileTabControls';
 import SidebarContent from './SidebarContent';
+import { getCharacterGroupedVideos, groupVideosByDirectory } from '@/utils/videoUtils';
 
 /**
- * YouTubeプレーヤーとタイムスタンプを組み合わせたコンポーネントのプロパティ
+ * YouTubeプレーヤーとタイムスタンプリストのプロパティ
  * @interface YouTubePlayerWithTimestampsProps
- * @property {MatchupVideo[]} [videos=[]] - 関連動画のリスト（検索結果で絞られた状態）
+ * @property {MatchupVideo[]} [videos=[]] - 表示する動画リスト
  * @property {MatchupVideo[]} [allVideos=[]] - 全ての動画リスト（検索結果で絞られる前）
  * @property {string} [selectedCharacter] - 選択されたキャラクター名（英語）
  * @property {string[]} [selectedOpponentCharacters=[]] - 選択された対戦キャラクター名の配列（英語）
  */
 interface YouTubePlayerWithTimestampsProps {
   videos?: MatchupVideo[];
-  allVideos?: MatchupVideo[]; // 検索結果で絞られる前の全ての動画リスト
+  allVideos?: MatchupVideo[];
   selectedCharacter?: string;
   selectedOpponentCharacters?: string[];
 }
@@ -58,17 +59,30 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   const hasRequiredCharacters = !!selectedCharacter && selectedOpponentCharacters.length > 0;
   const isSelectedCharacter = !!selectedCharacter;
   const isSelectedOpponentCharacters = !!selectedOpponentCharacters.length;
+  
+  // アップロード日でソートされた動画リストを作成
+  const sortedVideos = useMemo(() => {
+    return [...videos].sort((a, b) => {
+      // upload_dateがない場合は後ろに配置
+      if (!a.upload_date) return 1;
+      if (!b.upload_date) return -1;
+      
+      // 降順（最新順）でソート
+      return new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime();
+    });
+  }, [videos]);
 
   // プレイリストの開閉を制御する関数
   const handlePlaylistToggle = (isOpen: boolean) => {
     setIsPlaylistOpen(isOpen);
-    // モバイル表示の場合はタブも切り替える
-    if (isOpen && window.innerWidth < 640) { // smブレークポイント未満の場合
+    
+    // モバイル表示時はタブを切り替える
+    if (isOpen && window.innerWidth < 640) {
       setActiveTab('playlist');
     }
     
     // player-md以上の場合は、プレイリストを開くとタイムスタンプを閉じる
-    if (isOpen && window.matchMedia('(min-width: 1024px)').matches) {
+    if (isOpen && window.matchMedia('(min-width: 1100px)').matches) {
       setIsTimestampOpen(false);
     }
   };
@@ -76,20 +90,23 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   // タイムスタンプの開閉を制御する関数
   const handleTimestampToggle = (isOpen: boolean) => {
     setIsTimestampOpen(isOpen);
-    // モバイル表示の場合はタブも切り替える
-    if (isOpen && window.innerWidth < 640) { // smブレークポイント未満の場合
+    
+    // モバイル表示時はタブを切り替える
+    if (isOpen && window.innerWidth < 640) {
       setActiveTab('timestamp');
     }
     
     // player-md以上の場合は、タイムスタンプを開くとプレイリストを閉じる
-    if (isOpen && window.matchMedia('(min-width: 1024px)').matches) {
+    if (isOpen && window.matchMedia('(min-width: 1100px)').matches) {
       setIsPlaylistOpen(false);
     }
   };
-
-  // モバイルタブの切り替えを処理する関数
+  
+  // タブ切り替えの処理
   const handleTabChange = (tab: 'playlist' | 'timestamp') => {
     setActiveTab(tab);
+    
+    // タブに合わせてアコーディオンの開閉状態を更新
     if (tab === 'playlist') {
       setIsPlaylistOpen(true);
       setIsTimestampOpen(false);
@@ -98,8 +115,8 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
       setIsTimestampOpen(true);
     }
   };
-
-  // キャラクターが選択されたときにプレイリストを開く
+  
+  // 必要なキャラクターが選択されていない場合、プレイリストとタイムスタンプを閉じる
   useEffect(() => {
     if (hasRequiredCharacters) {
       setIsPlaylistOpen(true);
@@ -111,7 +128,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
     }
   }, [selectedCharacter, selectedOpponentCharacters, hasRequiredCharacters]);
 
-  // コンポーネントのマウント時に初期動画を設定
+  // URLが変更されたときに対応する動画情報を更新
   useEffect(() => {
     // 必要なキャラクターが選択されていない場合は何もしない
     if (!hasRequiredCharacters) {
@@ -213,7 +230,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
           selectedCharacter={selectedCharacter}
           selectedOpponentCharacters={selectedOpponentCharacters}
         />
-        
+      
         <PlayerContent 
           isVideoSelected={isVideoSelected}
           currentUrl={currentUrl}
@@ -231,7 +248,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
           onTabChange={handleTabChange}
         />
         
-        <SidebarContent 
+        <SidebarContent
           isPlaylistOpen={isPlaylistOpen}
           isTimestampOpen={isTimestampOpen}
           handlePlaylistToggle={handlePlaylistToggle}
@@ -243,7 +260,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
           currentTime={currentTime}
           handleTimestampClick={handleTimestampClick}
           handleVideoSelect={handleVideoSelect}
-          videos={videos}
+          videos={sortedVideos}
           allVideos={allVideos}
           selectedCharacter={selectedCharacter}
           expandedDirectories={expandedDirectories}

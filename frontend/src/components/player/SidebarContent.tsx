@@ -120,7 +120,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
     handleTimestampToggle(isOpen);
     
     // player-md以上の場合は、タイムスタンプを開くとプレイリストを閉じる
-    if (isOpen && window.matchMedia('(min-width: 1024px)').matches) {
+    if (isOpen && window.matchMedia('(min-width: 1100px)').matches) {
       handlePlaylistToggle(false);
     }
   };
@@ -130,11 +130,34 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
     handlePlaylistToggle(isOpen);
     
     // player-md以上の場合は、プレイリストを開くとタイムスタンプを閉じる
-    if (isOpen && window.matchMedia('(min-width: 1024px)').matches) {
+    if (isOpen && window.matchMedia('(min-width: 1100px)').matches) {
       handleTimestampToggle(false);
     }
   };
-
+  
+  // アップロード日でソートされた動画リストを作成
+  const sortedVideos = [...videos].sort((a, b) => {
+    // upload_dateがない場合は後ろに配置
+    if (!a.upload_date) return 1;
+    if (!b.upload_date) return -1;
+    
+    // 降順（最新順）でソート
+    return new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime();
+  });
+  
+  // ディレクトリごとにソートされた動画をグループ化
+  const sortedGroupedVideos: {[key: string]: MatchupVideo[]} = {};
+  Object.keys(groupedVideos).forEach(directory => {
+    sortedGroupedVideos[directory] = [...groupedVideos[directory]].sort((a, b) => {
+      // upload_dateがない場合は後ろに配置
+      if (!a.upload_date) return 1;
+      if (!b.upload_date) return -1;
+      
+      // 降順（最新順）でソート
+      return new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime();
+    });
+  });
+  
   return (
     <div className="w-full">
       {/* タイムスタンプとプレイリスト - スマホ表示時はタブ切り替え、タブレット表示時は横並び、デスクトップ表示時は縦並び */}
@@ -162,8 +185,8 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
           <div className="sm:w-1/2 md:w-1/2 player-md:w-full flex-shrink-0 flex-grow">
             {/* キャラクターアイコン付きプレイリスト */}
             <Playlist
-              videos={videos}
-              groupedVideos={groupedVideos}
+              videos={sortedVideos}
+              groupedVideos={sortedGroupedVideos}
               expandedDirectories={expandedDirectories}
               expandedGroups={expandedGroups}
               isOpen={isPlaylistOpen}
@@ -178,7 +201,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
           </div>
         </div>
         
-        {/* スマホ表示時のみ表示 */}
+        {/* スマホ表示用のレイアウト */}
         <div className="sm:hidden">
           <YouTubeTimestamp 
             onTimestampClick={handleTimestampClick}
