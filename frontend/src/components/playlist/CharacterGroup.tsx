@@ -17,6 +17,7 @@ import VideoItem, { MatchupVideo } from './VideoItem';
  * @property {MatchupVideo[]} videos - 全ての動画リスト
  * @property {(url: string) => void} onVideoSelect - 動画が選択されたときのコールバック関数
  * @property {() => void} [onHeightChange] - 高さが変更されたときに呼び出されるコールバック関数
+ * @property {string} selectedVideoUrl - 選択された動画のURL
  */
 interface CharacterGroupProps {
   charKey: string;
@@ -32,6 +33,7 @@ interface CharacterGroupProps {
   videos: MatchupVideo[];
   onVideoSelect: (url: string) => void;
   onHeightChange?: () => void;
+  selectedVideoUrl: string;
 }
 
 /**
@@ -61,13 +63,13 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
   toggleAccordion,
   videos,
   onVideoSelect,
-  onHeightChange
+  onHeightChange,
+  selectedVideoUrl
 }) => {
   const totalTimestamps = group.videos.reduce((sum, video) => sum + video.timestamps.length, 0);
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
   const [isInitialRender, setIsInitialRender] = useState(true);
-  const [selectedVideoIndex, setSelectedVideoIndex] = useState(-1);
   
   // デバッグ用ログ
   useEffect(() => {
@@ -109,7 +111,8 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
         v.directory === video.directory
       );
       
-      const isSelected = videoIndex === selectedVideoIndex;      
+      // 選択状態はselectedVideoUrlと一致するかどうかで判断
+      const isSelected = video.url === selectedVideoUrl;
       
       return (
         <VideoItem
@@ -120,8 +123,7 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
             // console.log('動画選択: インデックス', videoIndexInAllVideos, 'を選択');
             // console.log('選択した動画:', video.title, video.directory, video.url);
             if (onVideoSelect && videoIndexInAllVideos !== -1) {
-              setSelectedVideoIndex(videoIndex);
-              console.log("video.url", video.url);
+              // console.log("video.url", video.url);
               // onVideoSelect(videoIndexInAllVideos);
               onVideoSelect(video.url);
             }
@@ -130,6 +132,8 @@ const CharacterGroup: React.FC<CharacterGroupProps> = ({
       );
     });
   };
+
+  // console.log("group", group);
   
   return (
     <div className="border border-border rounded-md overflow-hidden mx-1 my-1">

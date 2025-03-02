@@ -24,6 +24,7 @@ import { getCharacterGroupedVideos, getMatchingTimestamps } from '../../utils/vi
  * @property {string} [selectedCharacter] - 選択されたキャラクター名（英語）
  * @property {'playlist' | 'timestamp'} [activeTab='playlist'] - モバイル表示時のアクティブなタブ
  * @property {boolean} [independentMode=false] - 横並び表示時に片方が開いても他方が閉じないモード
+ * @property {string} [selectedVideoUrl] - 選択された動画のURL
  */
 interface YouTubeTimestampProps {
   onTimestampClick: (time: number) => void;
@@ -40,6 +41,7 @@ interface YouTubeTimestampProps {
   selectedCharacter?: string;
   activeTab?: 'playlist' | 'timestamp';
   independentMode?: boolean;
+  selectedVideoUrl?: string;
 }
 
 /**
@@ -61,7 +63,8 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
   playerContainerRef,
   selectedCharacter,
   activeTab = 'playlist',
-  independentMode = false
+  independentMode = false,
+  selectedVideoUrl
 }) => {
   // 内部状態として使用するための状態を作成
   const [internalIsOpen, setInternalIsOpen] = useState(isOpen);
@@ -259,6 +262,7 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
         }}
         playerContainerRef={playerContainerRef}
         className={`player-md:block ${activeTab === 'playlist' ? 'block' : 'hidden sm:block'}`}
+        selectedVideoUrl={selectedVideoUrl || ''}
       />
     </div>
   );

@@ -29,6 +29,7 @@ import { TimestampItem } from '../timestamp/TimestampItem';
  * @property {(directory: string, charKey: string) => void} toggleAccordion - キャラクターグループアコーディオンの開閉を切り替える関数
  * @property {{[key: string]: MatchupVideo[]}} groupedVideos - ディレクトリごとにグループ化された動画
  * @property {(videos: MatchupVideo[]) => any} getCharacterGroupedVideos - 動画をキャラクターごとにグループ化する関数
+ * @property {string} selectedVideoUrl - 選択された動画のURL
  */
 interface SidebarContentProps {
   isPlaylistOpen: boolean;
@@ -51,6 +52,7 @@ interface SidebarContentProps {
   toggleAccordion: (directory: string, charKey: string) => void;
   groupedVideos: {[key: string]: MatchupVideo[]};
   getCharacterGroupedVideos: (videos: MatchupVideo[]) => any;
+  selectedVideoUrl: string;
 }
 
 /**
@@ -80,7 +82,8 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
   toggleDirectoryAccordion,
   toggleAccordion,
   groupedVideos,
-  getCharacterGroupedVideos
+  getCharacterGroupedVideos,
+  selectedVideoUrl
 }) => {
   // 現在の動画のタイムスタンプを取得
   const getCurrentVideoTimestamps = (): TimestampItem[] => {
@@ -157,6 +160,8 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
       return new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime();
     });
   });
+
+  console.log("selectedCharacter", selectedCharacter);
   
   return (
     <div className="w-full">
@@ -172,7 +177,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
               className="mb-2 player-md:mb-4"
               contentClassName="px-4"
               playerContainerRef={playerContainerRef}
-              maxHeight="300px"
+              // maxHeight="300px"
             >
               <TimestampList 
                 timestamps={getCurrentVideoTimestamps()}
@@ -197,6 +202,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
               setIsOpen={handlePlaylistAccordionToggle}
               playerContainerRef={playerContainerRef}
               className="mb-2"
+              selectedVideoUrl={selectedVideoUrl}
             />
           </div>
         </div>
@@ -220,6 +226,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
             activeTab={activeTab}
             // スマホ表示時は独立モードを無効に、それ以外は有効にする
             independentMode={window.innerWidth >= 640}
+            selectedVideoUrl={selectedVideoUrl}
           />
         </div>
       </div>
