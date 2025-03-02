@@ -2,7 +2,7 @@ import React from 'react';
 import { TimestampItem } from './TimestampItem';
 import CharacterIconPair, { CharacterIcon } from '../playlist/CharacterIconPair';
 import { characterIcons } from '../../data/characterData';
-import { formatTime } from '../utils/YouTubeUtils';
+import { formatTime } from '../../utils/YouTubeUtils';
 
 /**
  * タイムスタンプリストのプロパティ

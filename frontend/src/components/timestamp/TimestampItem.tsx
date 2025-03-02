@@ -1,5 +1,5 @@
 import React from 'react';
-import { formatTime } from '../utils/YouTubeUtils';
+import { formatTime } from '../../utils/YouTubeUtils';
 
 /**
  * タイムスタンプアイテムのデータ構造

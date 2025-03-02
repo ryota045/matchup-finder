@@ -20,6 +20,18 @@ export default {
       'player-md': '1100px', // プレーヤー用のカスタムブレークポイント
       'player-lg': '1400px', // プレーヤー用の大きめのブレークポイント
     },
+    container: {
+      center: true,
+      padding: '1rem', // 必要に応じてパディングを設定
+      screens: {
+        sm: '1200px',        
+        xl: '1280px',
+        '2xl': '1536px',
+        // 各ブレークポイントごとにカスタムのmax-widthを設定
+        '3xl': '1920px',
+        '4xl': '2560px',
+      },
+    },
     extend: {
       colors: {
         background: "var(--background)",

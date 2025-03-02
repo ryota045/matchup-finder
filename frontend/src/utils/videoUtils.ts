@@ -4,6 +4,8 @@
 
 import { characterIcons } from '../data/characterData';
 import { CharacterGroup, CharacterIcon, GroupedVideos, MatchupItem, MatchupVideo, TimestampItem } from '../types/matchup';
+import { MatchupVideo as PlaylistMatchupVideo } from '../components/playlist/VideoItem';
+import { CharacterIcon as PlaylistCharacterIcon } from '../components/playlist/CharacterIconPair';
 
 /**
  * キャラクターアイコンを取得する関数
@@ -18,12 +20,12 @@ export const getCharacterIcon = (characterName: string): CharacterIcon | null =>
   
   // キャラクターアイコンを検索
   const icon = characterIcons.find(icon => {
-    // engまたはanotationが一致するか確認
+    // engが完全一致するか確認
     if (icon.eng.toLowerCase() === lowerCaseName) return true;
     
-    // anotationがある場合はそれも確認
+    // anotationがある場合は完全一致するか確認
     if (icon.anotation) {
-      return icon.anotation.some(a => lowerCaseName.includes(a.toLowerCase()));
+      return icon.anotation.some(a => a.toLowerCase() === lowerCaseName);
     }
     
     return false;
@@ -54,57 +56,136 @@ export const createCharacterKey = (chara1: string, chara2: string): string => {
 };
 
 /**
- * 動画をキャラクターの組み合わせでグループ化する関数
+ * URLからタイムスタンプ部分を除去する関数
+ * @param url YouTube URL
+ * @returns タイムスタンプを除去したURL
+ */
+export const removeTimestampFromUrl = (url: string): string => {
+  // URLからタイムスタンプパラメータ（&t=〇〇s）を除去
+  return url.replace(/[&?]t=\d+s?/, '');
+};
+
+/**
+ * 動画をディレクトリごとにグループ化する関数
  * @param videos 動画リスト
- * @param selectedCharacter 選択されたキャラクター
- * @returns グループ化された動画
+ * @returns ディレクトリごとにグループ化された動画
+ */
+export const groupVideosByDirectory = (videos: PlaylistMatchupVideo[]): {[key: string]: PlaylistMatchupVideo[]} => {
+  if (videos.length === 0) {
+    return {};
+  }
+  
+  const grouped: {[key: string]: PlaylistMatchupVideo[]} = {};
+  videos.forEach(video => {
+    if (!grouped[video.directory]) {
+      grouped[video.directory] = [];
+    }
+    grouped[video.directory].push(video);
+  });
+  
+  return grouped;
+};
+
+/**
+ * キャラクター名からキャラクターアイコンを検索する関数（完全一致）
+ * @param characterName キャラクター名
+ * @returns キャラクターアイコン、見つからない場合はnull
+ */
+const findExactCharacterIcon = (characterName: string): PlaylistCharacterIcon | null => {
+  if (!characterName) return null;
+  
+  // 完全一致するキャラクターを検索
+  const icon = characterIcons.find(c => 
+    c.eng.toLowerCase() === characterName.toLowerCase() || 
+    c.anotation.some(a => a.toLowerCase() === characterName.toLowerCase())
+  );
+  
+  return icon || null;
+};
+
+/**
+ * キャラクターアイコンの組み合わせごとにビデオをグループ化する関数
+ * @param videos グループ化する動画リスト
+ * @param selectedCharacter 選択されたキャラクター名（英語）
+ * @returns キャラクターの組み合わせごとにグループ化された動画
  */
 export const getCharacterGroupedVideos = (
-  videos: MatchupVideo[],
+  videos: PlaylistMatchupVideo[], 
   selectedCharacter?: string
-): GroupedVideos => {
-  const groupedVideos: GroupedVideos = {};
+): {[key: string]: {icon1: PlaylistCharacterIcon | null, icon2: PlaylistCharacterIcon | null, videos: PlaylistMatchupVideo[], useChara?: string}} => {
+  const charGroups: {[key: string]: {icon1: PlaylistCharacterIcon | null, icon2: PlaylistCharacterIcon | null, videos: PlaylistMatchupVideo[], useChara?: string}} = {};
   
-  // 「その他」グループのキー
-  const otherGroupKey = 'other';
+  // 選択されたキャラクターのアイコンを取得
+  const selectedCharacterIcon = selectedCharacter ? 
+    characterIcons.find(c => c.eng.toLowerCase() === selectedCharacter.toLowerCase()) : null;
   
   videos.forEach(video => {
-    const { chara1, chara2, directory } = video;
+    // 使用キャラクター（chara1）と対戦相手（chara2）のアイコンを取得
+    // 完全一致で検索
+    const useCharacter = characterIcons.find(c => 
+      c.eng.toLowerCase() === video.chara1.toLowerCase() || 
+      c.anotation.some(a => a.toLowerCase() === video.chara1.toLowerCase())
+    );
     
-    // キャラクターが見つからない場合は「その他」グループに入れる
-    if (!chara1 || !chara2) {
-      if (!groupedVideos[otherGroupKey]) {
-        groupedVideos[otherGroupKey] = {
+    const opponentCharacter = characterIcons.find(c => 
+      c.eng.toLowerCase() === video.chara2.toLowerCase() || 
+      c.anotation.some(a => a.toLowerCase() === video.chara2.toLowerCase())
+    );
+    
+    if (useCharacter && opponentCharacter) {
+      // キャラクター名をアルファベット順にソートしてグループキーを作成
+      // これにより、AvsB と BvsA を同じグループにする
+      const sortedChars = [useCharacter.eng, opponentCharacter.eng].sort();
+      const charKey = `${sortedChars[0]}-${sortedChars[1]}`;
+      
+      // グループが存在しない場合は新しく作成
+      if (!charGroups[charKey]) {
+        // 選択されたキャラクターが存在し、このグループに含まれている場合
+        const isSelectedCharInGroup = selectedCharacterIcon && 
+          (selectedCharacterIcon.eng === useCharacter.eng || selectedCharacterIcon.eng === opponentCharacter.eng);
+        
+        if (isSelectedCharInGroup) {
+          // 選択されたキャラクターを常に左側（icon1）に配置
+          const icon1 = selectedCharacterIcon.eng === useCharacter.eng ? useCharacter : opponentCharacter;
+          const icon2 = selectedCharacterIcon.eng === useCharacter.eng ? opponentCharacter : useCharacter;
+          
+          charGroups[charKey] = {
+            icon1: icon1,
+            icon2: icon2,
+            videos: [],
+            // 使用キャラクター名を選択されたキャラクターに設定
+            useChara: selectedCharacterIcon.eng
+          };
+        } else {
+          // 選択されたキャラクターがない場合は従来通り
+          charGroups[charKey] = {
+            // 使用キャラクターを常に左側（icon1）に配置
+            icon1: useCharacter,
+            icon2: opponentCharacter,
+            videos: [],
+            // 使用キャラクター名を明示的に指定
+            useChara: useCharacter.eng
+          };
+        }
+      }
+      
+      // 動画をグループに追加
+      charGroups[charKey].videos.push(video);
+    } else {
+      // キャラクターが見つからない場合は「その他」グループに入れる
+      const otherKey = 'other';
+      if (!charGroups[otherKey]) {
+        charGroups[otherKey] = {
           icon1: null,
           icon2: null,
           videos: []
         };
       }
-      groupedVideos[otherGroupKey].videos.push(video);
-      return;
+      charGroups[otherKey].videos.push(video);
     }
-    
-    // キャラクターの組み合わせキーを生成（アルファベット順）
-    const charKey = createCharacterKey(chara1, chara2);
-    
-    // グループが存在しない場合は作成
-    if (!groupedVideos[charKey]) {
-      const icon1 = getCharacterIcon(chara1);
-      const icon2 = getCharacterIcon(chara2);
-      
-      groupedVideos[charKey] = {
-        icon1,
-        icon2,
-        videos: [],
-        useChara: selectedCharacter
-      };
-    }
-    
-    // 動画をグループに追加
-    groupedVideos[charKey].videos.push(video);
   });
   
-  return groupedVideos;
+  return charGroups;
 };
 
 /**
@@ -328,5 +409,56 @@ export const transformMatchupItemToMatchupVideo = (matchupItems: MatchupItem[]):
         // console.log(`ディレクトリ ${item.directory} から ${videos.length} 件の動画を抽出しました`);
         return videos;
       })
+};
+
+/**
+ * 現在のURLに一致するタイムスタンプを収集する関数
+ * @param url 現在のURL
+ * @param videos 検索結果の動画リスト
+ * @param allVideos 全ての動画リスト
+ * @returns 現在のURLに一致するタイムスタンプのリスト
+ */
+export const getMatchingTimestamps = (url: string, videos: PlaylistMatchupVideo[], allVideos: PlaylistMatchupVideo[]) => {
+  if (!url) {
+    return [];
+  }
+  
+  const currentUrl = removeTimestampFromUrl(url);
+  const matchingTimestamps: any[] = [];
+  
+  // 検索結果で絞られる前の全ての動画から検索
+  const videosToSearch = allVideos && allVideos.length > 0 ? allVideos : videos;
+  
+  // まず、現在選択されている動画と完全に一致する動画のタイムスタンプを追加
+  videosToSearch.forEach(video => {
+    // 動画のURLからタイムスタンプを除去して比較
+    const videoUrl = removeTimestampFromUrl(video.url);
+    
+    // URLが一致する場合のみタイムスタンプを追加
+    if (videoUrl === currentUrl) {
+      video.timestamps.forEach(timestamp => {
+        // 元の動画情報を保持するために新しいプロパティを追加
+        // sourceVideoIndexは検索結果の配列（videos）内でのインデックスを計算
+        const sourceVideoIndex = videos.findIndex(v => {
+          // URLからタイムスタンプを除去して比較
+          const vUrl = removeTimestampFromUrl(v.url);
+          // URLとタイトルとディレクトリが一致する動画を探す
+          return vUrl === videoUrl && v.title === video.title && v.directory === video.directory;
+        });
+        
+        matchingTimestamps.push({
+          ...timestamp,
+          sourceVideo: video.title,
+          sourceVideoIndex: sourceVideoIndex, // 検索結果内での対応するインデックス
+          // キャラクター情報も追加
+          chara1: video.chara1,
+          chara2: video.chara2
+        });
+      });
+    }
+  });
+  
+  // タイムスタンプをtimeの値が小さい順に並べ替え
+  return matchingTimestamps.sort((a, b) => a.time - b.time);
 };
 

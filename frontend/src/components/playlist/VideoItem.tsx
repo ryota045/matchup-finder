@@ -1,6 +1,6 @@
 import React from 'react';
 import { TimestampItem } from '../timestamp/TimestampItem';
-import { formatTime } from '../utils/YouTubeUtils';
+import { formatTime } from '../../utils/YouTubeUtils';
 
 /**
  * マッチアップ動画のデータ構造

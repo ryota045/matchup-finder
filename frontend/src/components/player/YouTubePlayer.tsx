@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { createEmbedUrl } from '../utils/YouTubeUtils';
+import { createEmbedUrl } from '../../utils/YouTubeUtils';
 
 /**
  * YouTubeプレーヤーコンポーネントのプロパティ
