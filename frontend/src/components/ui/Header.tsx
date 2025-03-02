@@ -42,12 +42,12 @@ const Header: React.FC = () => {
           <Link href="/" className="text-foreground/80 hover:text-foreground transition-colors">
             ホーム
           </Link>
-          <Link href="/search" className="text-foreground/80 hover:text-foreground transition-colors">
+          <Link href="/matchup" className="text-foreground/80 hover:text-foreground transition-colors">
             検索
           </Link>
-          <Link href="/about" className="text-foreground/80 hover:text-foreground transition-colors">
+          {/* <Link href="/about" className="text-foreground/80 hover:text-foreground transition-colors">
             このサイトについて
-          </Link>
+          </Link> */}
           <ThemeToggle />
         </nav>
 
@@ -77,19 +77,19 @@ const Header: React.FC = () => {
               ホーム
             </Link>
             <Link 
-              href="/search" 
+              href="/matchup" 
               className="p-2 rounded-md hover:bg-muted/20 dark:hover:bg-muted/10 transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               検索
             </Link>
-            <Link 
+            {/* <Link 
               href="/about" 
               className="p-2 rounded-md hover:bg-muted/20 dark:hover:bg-muted/10 transition-colors"
               onClick={() => setIsMenuOpen(false)}
             >
               このサイトについて
-            </Link>
+            </Link> */}
             <div className="p-2">
               <ThemeToggle />
             </div>
