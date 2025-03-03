@@ -2,6 +2,8 @@
  * キャラクター関連のユーティリティ関数
  */
 
+import { characterIcons } from "@/data/characterData";
+
 /**
  * キャラクター名が一致するかどうかをチェックする関数
  * @param characterName チェック対象のキャラクター名
@@ -87,42 +89,57 @@ export const isUserCharacterMatched = (
 export const isOpponentCharactersMatched = (
   chara1: string,
   chara2: string,
+  selectedCharacter: string,
   selectedCharacters: string[]
 ): boolean => {
   // 選択された対戦キャラクターがない場合は常にtrue
   if (!selectedCharacters.length) return true;
+
+  // ミラーが存在するかチェック
+  const mirrorCharacter = selectedCharacters.includes(selectedCharacter);
   
-  // 各対戦キャラクターについて、いずれかのanotation値がchara1またはchara2に含まれているかチェック
-  // OR条件: 選択したキャラクターのいずれか1つでも一致すればtrue
+  if(mirrorCharacter){
+    // ミラーの場合はtrueを返す
+    if(chara1.toLowerCase() === chara2.toLowerCase()){
+      return true;
+    }
+    
+    // ミラー出ない場合は、selectedCharactersの中にselectedCharacter以外のキャラクターと一致するchara1,2が存在するかどうかをチェック
+    return (isCharacterMatched(chara1, selectedCharacter) && selectedCharacters.map(char => char.split(',').map(c => c.toLowerCase())).flat().includes(chara2.toLowerCase())) ||
+           (isCharacterMatched(chara2, selectedCharacter) && selectedCharacters.map(char => char.split(',').map(c => c.toLowerCase())).flat().includes(chara1.toLowerCase()));
+  
+  }
+
+  // ミラーが存在しない場合
   return selectedCharacters.some(char => {
     // charが文字列でない場合は処理をスキップ
     if (typeof char !== 'string') return false;
     
     // カンマ区切りのanotation値を配列に分割
     const anotations = char.split(',');
-    
     return anotations.some(anotation => {
-      // 自分対自分の場合（例：RyuvsRyu）の特殊処理
-      if (chara1.toLowerCase() === chara2.toLowerCase()) {
-        // 選択したキャラクターも同じキャラクターの場合のみマッチ
-        return anotations.length === 1 && isCharacterMatched(chara1, anotation);
-      }
-      
-      // 選択したキャラクターが1つだけで、それが自分対自分の検索の場合
-      if (anotations.length === 1) {
-        // 選択したキャラクターが自分対自分の検索の場合は、
-        // 対戦相手が同じキャラクターの場合のみマッチさせる
-        const isCharaSelfMatch = chara1.toLowerCase() === chara2.toLowerCase() && 
-                                isCharacterMatched(chara1, anotation);
-        
-        // 自分対自分の検索でない場合は通常のマッチング
-        const isNormalMatch = chara1.toLowerCase() !== chara2.toLowerCase() && 
-                             (isCharacterMatched(chara1, anotation) || isCharacterMatched(chara2, anotation));
-        
-        return isCharaSelfMatch || isNormalMatch;
-      }
-      
       return isCharacterMatched(chara1, anotation) || isCharacterMatched(chara2, anotation);
     });
   });
+
 }; 
+
+// engのキャラクター名からCharacterIconのanotation配列を取得する関数
+export const getAnnotationArray = (characterName: string): string[] => {
+  // characterListからcharacterNameに一致するキャラクターを取得
+  // characterListを取得
+  const characterList = characterIcons;
+
+  const character = characterList.find(c => c.eng === characterName);
+  return character?.anotation || [];
+};
+
+export const getCharacterEng = (characterName: string): string => {
+  // characterListからcharacterNameに一致するキャラクターを取得
+  // characterListを取得
+  const characterList = characterIcons;
+  // characterListの中にあるオブジェクトでanotationの中にcharacterNameが含まれているものを取得
+  const character = characterList.find(c => c.anotation.includes(characterName));
+  // console.log("character:",character);
+  return character?.eng || "";
+};

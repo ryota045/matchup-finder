@@ -48,6 +48,7 @@ export const searchMatchupVideos = (
           const opponentCharactersMatched = isOpponentCharactersMatched(
             value.chara1 || '',
             value.chara2 || '',
+            selectedCharacter,
             selectedCharacters
           );
           
@@ -90,6 +91,7 @@ export const searchMatchupVideos = (
             const opponentCharactersMatched = isOpponentCharactersMatched(
               value.chara1 || '',
               value.chara2 || '',
+              selectedCharacter,
               selectedCharacters
             );
             
