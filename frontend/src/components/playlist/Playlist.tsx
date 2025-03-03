@@ -78,7 +78,8 @@ const Playlist: React.FC<PlaylistProps> = ({
   const renderDirectoryGroups = () => {
     return Object.keys(groupedVideos).length > 0 ? (
       <div className="divide-y divide-border dark:divide-gray-800">
-        {Object.keys(groupedVideos).map(directory => (
+        {Object.keys(groupedVideos).sort((a, b) => groupedVideos[b].length - groupedVideos[a].length) // ビデオ数で降順ソート
+        .map(directory => (
           <DirectoryGroup
             key={directory}
             directory={directory}
