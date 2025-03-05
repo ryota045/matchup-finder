@@ -22,8 +22,8 @@ export default {
     },
     container: {
       center: true,
-      padding: '1rem', // 必要に応じてパディングを設定
-      screens: {
+      padding: 'xs:1rem', // 必要に応じてパディングを設定
+      screens: {       
         sm: '1200px',        
         xl: '1280px',
         '2xl': '1536px',

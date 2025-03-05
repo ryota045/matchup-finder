@@ -51,8 +51,8 @@ const SearchResults: React.FC<SearchResultsProps> = ({
   return (
     <div className="space-y-4">
       <div className="pt-4 md:p-4 bg-card rounded-lg shadow-sm">
-        <h2 className="text-xl font-semibold mb-2">検索結果</h2>
-        <p className="text-sm text-muted-foreground mb-4">
+        <h2 className="text-xl font-semibold mb-2 pl-4 xs:pl-0">検索結果</h2>
+        <p className="text-sm text-muted-foreground mb-4 pl-4 xs:pl-0">
           {matchupVideos.length}件のマッチアップ動画が見つかりました
         </p>
         
