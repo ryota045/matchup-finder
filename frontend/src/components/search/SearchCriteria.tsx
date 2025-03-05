@@ -19,7 +19,7 @@ const SearchCriteriaComponent: React.FC<SearchCriteriaProps> = ({
   onOpponentCharacterSelect
 }) => {
   return (
-    <div className="mb-2 px-4 pt-4 pb-2 bg-card rounded-lg shadow-md">
+    <div className="mb-2 px-4 pt-4 bg-card rounded-lg shadow-md">
       <h2 className="text-xl font-semibold mb-4">検索条件</h2>
       
       <div className="grid grid-cols-1 gap-4">

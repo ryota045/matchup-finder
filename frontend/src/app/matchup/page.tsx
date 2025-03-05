@@ -66,7 +66,7 @@ export default function MatchupPage() {
 
   return (
     <div className="container mx-auto py-8 xs:px-4">
-      <h1 className="text-3xl font-bold mb-8">マッチアップ検索</h1>
+      <h1 className="text-3xl font-bold mb-2 xs:mb-8 pl-4 xs:pl-0">マッチアップ検索</h1>
       
       {/* 検索条件コンポーネント */}
       <SearchCriteriaComponent
