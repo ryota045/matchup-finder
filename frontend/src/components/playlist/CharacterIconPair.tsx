@@ -72,9 +72,9 @@ const CharacterIconPair: React.FC<CharacterIconPairProps> = ({ icon1, icon2, use
   }
 
   return (
-    <div className="flex items-center mr-2">
+    <div className="flex items-center">
       {/* 左側のアイコン（使用キャラクター優先） */}
-      <div className="w-8 h-8 rounded-md overflow-hidden border border-border bg-card">
+      <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-md overflow-hidden border-2 border-border/80 dark:border-border/60 bg-card shadow-sm">
         {leftIcon ? (
           <img
             src={leftIcon.path}
@@ -90,10 +90,10 @@ const CharacterIconPair: React.FC<CharacterIconPairProps> = ({ icon1, icon2, use
       </div>
       
       {/* VS表示 */}
-      <div className="mx-1 text-xs font-medium text-muted-foreground">VS</div>
+      <div className="mx-1 sm:mx-1.5 text-xs sm:text-sm font-bold text-primary/80 dark:text-primary/70 bg-primary/10 dark:bg-primary/5 px-1.5 py-0.5 rounded-full">VS</div>
       
       {/* 右側のアイコン */}
-      <div className="w-8 h-8 rounded-md overflow-hidden border border-border bg-card">
+      <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-md overflow-hidden border-2 border-border/80 dark:border-border/60 bg-card shadow-sm">
         {rightIcon ? (
           <img
             src={rightIcon.path}

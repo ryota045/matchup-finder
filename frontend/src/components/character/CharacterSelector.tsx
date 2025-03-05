@@ -184,14 +184,6 @@ const CharacterSelectionModal: React.FC<CharacterSelectionModalProps> = ({
   const modalRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    if (isOpen && searchInputRef.current) {
-      setTimeout(() => {
-        searchInputRef.current?.focus();
-      }, 100);
-    }
-  }, [isOpen]);
-
   // モーダル外クリックで閉じる処理を追加
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
