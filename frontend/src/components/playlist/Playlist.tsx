@@ -110,6 +110,7 @@ const Playlist: React.FC<PlaylistProps> = ({
       onToggle={setIsOpen}
       playerContainerRef={playerContainerRef as RefObject<HTMLDivElement | null>}
       className={className}
+      disableAnimationOnMobile={true}
     >
       {renderDirectoryGroups()}
     </AnimatedAccordion>

@@ -301,6 +301,7 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
     setIsModalOpen(false);
   };
 
+  // キャラクター選択処理（複数選択）
   const handleMultipleCharacterSelect = (characterName: string) => {
     setMultipleCharacters(prev => {
       // すでに選択されている場合は削除、そうでなければ追加
@@ -319,7 +320,6 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
   // 複数選択の変更を通知
   const notifyMultipleSelectionChange = (selection: string[]) => {
     if (onMultipleCharactersSelect) {
-      // レンダリング後に実行するようにする
       setTimeout(() => {
         // 選択されたキャラクターのanotationフィールドの値をすべて使用
         const anotationValues = selection.map(char => {
@@ -337,6 +337,7 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
     }
   };
 
+  // キャラクタークリック時の処理
   const handleCharacterClick = (characterName: string) => {
     if (selectionMode === 'single') {
       handleSingleCharacterSelect(characterName);
@@ -401,14 +402,14 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
       {/* クリアボタン */}
       <div className="flex justify-end space-x-4">
         <button
-          className="btn btn-outline"
+          className="btn btn-outline p-1"
           onClick={clearSingleSelection}
           disabled={!singleCharacter}
         >
           使用キャラクターをクリア
         </button>
         <button
-          className="btn btn-outline"
+          className="btn btn-outline p-1"
           onClick={clearMultipleSelection}
           disabled={multipleCharacters.length === 0}
         >
@@ -419,7 +420,7 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
       {/* キャラクター選択モーダル */}
       <CharacterSelectionModal
         isOpen={isModalOpen}
-        title={selectionMode === 'single' ? '使用キャラクター選択' : '対戦キャラクター選択'}
+        title={selectionMode === 'single' ? '使用キャラクターを選択' : '対戦キャラクターを選択'}
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
         onClose={closeModal}

@@ -243,8 +243,8 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   };
 
   return (
-    <div className="container flex flex-col player-md:flex-row gap-4 justify-center w-full mx-auto md:px-4">
-      <div className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border border-border dark:border-gray-800 p-4 w-full player-md:w-3/4 player-lg:w-4/5">
+    <div className="flex flex-col player-md:flex-row gap-4 justify-center w-full mx-auto">
+      <div className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border xs:border-border dark:border-gray-800 xs:p-2 w-full player-md:w-3/4 player-lg:w-4/5">
         <PlayerControls 
           isVideoSelected={isVideoSelected}
           currentVideo={currentVideo}
@@ -265,10 +265,10 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
       {/* タイムスタンプとプレイリスト */}
       <div className="w-full player-md:w-1/4 player-lg:w-1/5">
         {/* スマホ表示時のみ表示するタブ切り替えUI */}
-        <MobileTabControls 
+        {/* <MobileTabControls 
           activeTab={activeTab}
           onTabChange={handleTabChange}
-        />
+        /> */}
         
         <SidebarContent
           isPlaylistOpen={isPlaylistOpen}

@@ -30,7 +30,7 @@ const PlayerControls: React.FC<PlayerControlsProps> = ({
   selectedOpponentCharacters
 }) => {
   return (
-    <div className="flex items-center justify-between mb-4">
+    <div className="flex items-center justify-between sm:mb-4 mb-1 p-2">
       <h3 className="text-lg font-semibold truncate mr-2">
         {!selectedCharacter 
           ? 'キャラクターを選択してください'
