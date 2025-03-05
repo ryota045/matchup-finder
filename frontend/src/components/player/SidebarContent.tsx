@@ -169,16 +169,19 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
       <div className="player-md:block">
         {/* タブレット以上の表示時は横並び、デスクトップ表示時は縦並び */}
         <div className="hidden xs:flex xs:flex-row md:flex-row player-md:flex-col xs:gap-2 md:gap-3 player-md:gap-0">
-          <div className="xs:w-1/2 md:w-1/2 player-md:w-full flex-shrink-0 flex-grow">
+          <div className={`xs:w-1/2 md:w-1/2 player-md:w-full flex-shrink-0 flex-grow`}>
             <AnimatedAccordion
               title="タイムスタンプ"
               isOpen={isTimestampOpen}
               onToggle={handleTimestampAccordionToggle}
               className="mb-2 player-md:mb-4"
-              contentClassName="px-4"
+              contentClassName="px-2 sm:px-3 md:px-4"
               playerContainerRef={playerContainerRef}              
               disableAnimationOnMobile={true}
             >
+              <div className="bg-gradient-to-r from-primary/5 to-transparent p-1 rounded-lg mb-2">
+                <h3 className="text-sm font-medium text-primary/80">現在の動画: {getCurrentVideoTimestamps().length}件</h3>
+              </div>
               <TimestampList 
                 timestamps={getCurrentVideoTimestamps()}
                 onTimestampClick={handleTimestampClick}

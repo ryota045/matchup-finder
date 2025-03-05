@@ -258,18 +258,19 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
   // キャラクターが選択されていない場合はメッセージを表示
   if (!selectedCharacter || videos.length === 0) {
     return (
-      <div className="youtube-timestamp" style={{ position: 'relative' }}>
-        <div className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border border-border dark:border-gray-800 p-6 mb-4">
-          <div className="text-center">
-            <div className="text-3xl mb-3">🎮</div>
-            <h3 className="text-lg font-semibold mb-2">キャラクターを選択してください</h3>
-            <p className="text-muted-foreground text-sm">
-              上部のキャラクターセレクターから使用キャラクターを選択すると、
-              タイムスタンプとプレイリストが表示されます。
-            </p>
-          </div>
-        </div>
-      </div>
+      // <div className="youtube-timestamp" style={{ position: 'relative' }}>
+      //   <div className="bg-card dark:bg-card/95 rounded-lg shadow-md dark:shadow-xl border border-border dark:border-gray-800 p-6 mb-4">
+      //     <div className="text-center">
+      //       <div className="text-3xl mb-3">🎮</div>
+      //       <h3 className="text-lg font-semibold mb-2">キャラクターを選択してください</h3>
+      //       <p className="text-muted-foreground text-sm">
+      //         上部のキャラクターセレクターから使用キャラクターを選択すると、
+      //         タイムスタンプとプレイリストが表示されます。
+      //       </p>
+      //     </div>
+      //   </div>
+      // </div>
+      null
     );
   }
 
@@ -313,7 +314,7 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
               overflowY: 'auto'
             }}
           >
-            <div className="px-4">
+            <div className="px-2 sm:px-3 md:px-4 w-full">              
               <TimestampList 
                 timestamps={allMatchingTimestamps}
                 onTimestampClick={onTimestampClick}
@@ -332,24 +333,34 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
                 : '500px',
               overflowY: 'auto'
             }}
-          >
-            <div className="divide-y divide-border dark:divide-gray-800">
-              {Object.keys(groupedVideos).sort((a, b) => groupedVideos[b].length - groupedVideos[a].length)
-              .map(directory => (
-                <DirectoryGroup
-                  key={directory}
-                  directory={directory}
-                  videos={groupedVideos[directory]}
-                  isExpanded={expandedDirectories[directory]}
-                  toggleDirectoryAccordion={() => toggleDirectoryAccordion(directory)}
-                  expandedGroups={expandedGroups}
-                  toggleAccordion={toggleAccordion}
-                  onVideoSelect={onVideoSelect || (() => {})}
-                  getCharacterGroupedVideos={(videos) => getCharacterGroupedVideos(videos, selectedCharacter)}
-                  selectedVideoUrl={selectedVideoUrl || ''}
-                />
-              ))}
-            </div>
+          >           
+            <Playlist
+              videos={videos}
+              groupedVideos={groupedVideos}
+              expandedDirectories={expandedDirectories}
+              expandedGroups={expandedGroups}
+              isOpen={internalIsPlaylistOpen}
+              toggleDirectoryAccordion={toggleDirectoryAccordion}
+              toggleAccordion={toggleAccordion}
+              onVideoSelect={onVideoSelect || (() => {})}
+              getCharacterGroupedVideos={(videos) => getCharacterGroupedVideos(videos, selectedCharacter)}
+              setIsOpen={(newIsOpen: boolean) => {
+                setInternalIsPlaylistOpen(newIsOpen);
+                if (setIsPlaylistOpen) {
+                  setIsPlaylistOpen(newIsOpen);
+                }
+                // player-md以上の場合は、プレイリストを開くとタイムスタンプを閉じる
+                if (newIsOpen && window.matchMedia('(min-width: 1024px)').matches) {
+                  setInternalIsOpen(false);
+                  if (setIsOpen) {
+                    setIsOpen(false);
+                  }
+                }
+              }}
+              playerContainerRef={playerContainerRef}
+              className="player-md:block"
+              selectedVideoUrl={selectedVideoUrl || ''}
+            />
           </div>
         </div>
       </div>

@@ -163,10 +163,10 @@ const TimestampList: React.FC<TimestampListProps> = ({
   }, [currentTime, timestamps, findNearestTimestamp, scrollToTimestamp]);
 
   return (
-    <div className="timestamp-list-container bg-card dark:bg-card/95 border-border dark:border-gray-800 select-none">
+    <div className="timestamp-list-container bg-card dark:bg-card/95 border-border dark:border-gray-800 select-none w-full rounded-lg overflow-hidden shadow-sm">
       <div 
         ref={scrollContainerRef}
-        className="p-2 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent"
+        className="overflow-y-auto scrollbar-thin scrollbar-thumb-gray-400 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent bg-gradient-to-b from-card/50 to-card p-2"
         // style={{ maxHeight: '300px' }}
       >
         {timestamps.map((timestamp, index) => {
@@ -185,22 +185,20 @@ const TimestampList: React.FC<TimestampListProps> = ({
               `}
               onClick={() => handleTimestampClick(timestamp.time)}
             >
-              <div className="flex items-center">
+              <div className="flex items-center justify-between w-full px-[10%]">
                 <span className="inline-block w-16 text-sm font-mono text-muted-foreground bg-muted/20 dark:bg-muted/10 rounded px-1 py-0.5 text-center">
                   {timestamp.originalDetectTime || formatTime(timestamp.time)}
                 </span>
                 
                 {/* キャラクターアイコンを表示 */}
                 {timestamp.chara1 && timestamp.chara2 && (
-                  <div className="flex-shrink-0 ml-2">
+                  <div className="flex-shrink-0 ml-4">
                     <CharacterIconPair 
                       {...getCharacterIcons(timestamp.chara1, timestamp.chara2)} 
+                      useChara={selectedCharacter}
                     />
                   </div>
                 )}
-                
-                {/* タイムスタンプのラベルを表示 */}
-                {/* <span className="ml-2 text-sm truncate">{timestamp.label}</span> */}
               </div>
             </div>
           );
