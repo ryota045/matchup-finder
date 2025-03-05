@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { CharacterIcon } from '../../data/characterData';
 
 // 個別のキャラクターアイコンコンポーネント
@@ -6,16 +6,19 @@ interface SingleCharacterIconProps {
   icon: CharacterIcon;
   isSelected: boolean;
   onClick: () => void;
+  width: number;
 }
 
 const SingleCharacterIcon: React.FC<SingleCharacterIconProps> = ({ 
   icon, 
   isSelected, 
-  onClick 
+  onClick,
+  width
 }) => {
   return (
     <div
-      className={`relative group cursor-pointer transition-transform duration-200 hover:scale-105 w-16 ${
+      style={{ width: `${width}px` }}
+      className={`relative group cursor-pointer transition-transform duration-200 hover:scale-105 ${
         isSelected ? 'ring-2 ring-primary ring-offset-2 ring-offset-background' : ''
       }`}
       onClick={onClick}
@@ -49,22 +52,51 @@ const CharacterIcons: React.FC<CharacterIconProps> = ({
   onCharacterClick, 
   selectedCharacters = [] 
 }) => {
+  const [iconWidth, setIconWidth] = useState(64); // デフォルト値
+  const gap = 8; // gap-2 = 8px
+  
+  useEffect(() => {
+    const updateIconWidth = () => {
+      const container = document.getElementById('character-icons-container');
+      if (container) {
+        const containerWidth = container.clientWidth - 16; // p-2の分を引く (8px * 2)
+        if (containerWidth > 0) {
+          // 最適なアイコン数を計算
+          // 最小幅は56px、最大幅は64pxとする
+          const minIconWidth = 56;
+          const maxIconWidth = 64;
+          
+          // コンテナ内に収まるアイコン数を計算
+          const maxIcons = Math.floor((containerWidth + gap) / (minIconWidth + gap));
+          
+          // アイコン1つあたりの最適な幅を計算
+          let optimalWidth = Math.floor((containerWidth - (maxIcons - 1) * gap) / maxIcons);
+          
+          // 最小・最大幅の制約を適用
+          optimalWidth = Math.min(Math.max(optimalWidth, minIconWidth), maxIconWidth);
+          
+          setIconWidth(optimalWidth);
+        }
+      }
+    };
+    
+    updateIconWidth();
+    window.addEventListener('resize', updateIconWidth);
+    return () => window.removeEventListener('resize', updateIconWidth);
+  }, [icons.length]);
+  
   return (
     <div className="bg-card/95 rounded-lg">
       <div className="max-w-full mx-auto">
         <div className="overflow-x-auto overflow-y-hidden">
-          <div className="grid grid-cols-3 gap-2 min-w-fit auto-rows-auto p-2
-                          xs:grid-cols-4 
-                          sm:grid-cols-6 
-                          md:grid-cols-8 
-                          lg:grid-cols-10 
-                          xl:grid-cols-12">
+          <div id="character-icons-container" className="flex flex-wrap gap-2 p-2">         
             {icons.map((icon: CharacterIcon) => (
               <SingleCharacterIcon
                 key={icon.eng}
                 icon={icon}
                 isSelected={selectedCharacters.includes(icon.eng)}
                 onClick={() => onCharacterClick(icon.eng)}
+                width={iconWidth}
               />
             ))}
           </div>
