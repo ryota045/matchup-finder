@@ -167,17 +167,17 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
     <div className="w-full">
       {/* タイムスタンプとプレイリスト - スマホ表示時はタブ切り替え、タブレット表示時は横並び、デスクトップ表示時は縦並び */}
       <div className="player-md:block">
-        {/* スマホ表示時はタブ切り替え、タブレット表示時は横並び、デスクトップ表示時は縦並び */}
-        <div className="hidden sm:flex sm:flex-row md:flex-row player-md:flex-col sm:gap-2 md:gap-3 player-md:gap-0">
-          <div className="sm:w-1/2 md:w-1/2 player-md:w-full flex-shrink-0 flex-grow">
+        {/* タブレット以上の表示時は横並び、デスクトップ表示時は縦並び */}
+        <div className="hidden xs:flex xs:flex-row md:flex-row player-md:flex-col xs:gap-2 md:gap-3 player-md:gap-0">
+          <div className="xs:w-1/2 md:w-1/2 player-md:w-full flex-shrink-0 flex-grow">
             <AnimatedAccordion
               title="タイムスタンプ"
               isOpen={isTimestampOpen}
               onToggle={handleTimestampAccordionToggle}
               className="mb-2 player-md:mb-4"
               contentClassName="px-4"
-              playerContainerRef={playerContainerRef}
-              // maxHeight="300px"
+              playerContainerRef={playerContainerRef}              
+              disableAnimationOnMobile={true}
             >
               <TimestampList 
                 timestamps={getCurrentVideoTimestamps()}
@@ -187,7 +187,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
               />
             </AnimatedAccordion>
           </div>
-          <div className="sm:w-1/2 md:w-1/2 player-md:w-full flex-shrink-0 flex-grow">
+          <div className="xs:w-1/2 md:w-1/2 player-md:w-full flex-shrink-0 flex-grow">
             {/* キャラクターアイコン付きプレイリスト */}
             <Playlist
               videos={sortedVideos}
@@ -208,11 +208,11 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
         </div>
         
         {/* スマホ表示用のレイアウト */}
-        <div className="sm:hidden">
+        <div className="xs:hidden">
           <YouTubeTimestamp 
             onTimestampClick={handleTimestampClick}
             currentTime={currentTime}
-            videos={hasRequiredCharacters ? videos : []}
+            videos={hasRequiredCharacters ? sortedVideos : []}
             allVideos={hasRequiredCharacters ? allVideos : []} // 全ての動画リストを渡す
             onVideoSelect={handleVideoSelect}
             url={currentUrl}
@@ -225,7 +225,7 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
             // モバイル表示用のタブ状態を渡す
             activeTab={activeTab}
             // スマホ表示時は独立モードを無効に、それ以外は有効にする
-            independentMode={window.innerWidth >= 640}
+            independentMode={false}
             selectedVideoUrl={selectedVideoUrl}
           />
         </div>

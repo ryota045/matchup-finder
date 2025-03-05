@@ -62,11 +62,18 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
   const contentRef = useRef<HTMLDivElement>(null);
   const [contentHeight, setContentHeight] = useState<number | "auto">("auto");
   const [isInitialRender, setIsInitialRender] = useState(true);
+  const [internalIsExpanded, setInternalIsExpanded] = useState(isExpanded);
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  // 外部のisExpandedプロパティが変更されたら内部状態を更新
+  useEffect(() => {
+    setInternalIsExpanded(isExpanded);
+  }, [isExpanded]);
 
   // コンテンツの高さを再計算する関数
   const updateContentHeight = () => {
-    if (contentRef.current && isExpanded) {
-      // 最大高さを300pxに制限
+    if (contentRef.current && internalIsExpanded) {
+      // 最大高さを400pxに制限
       const calculatedHeight = Math.min(contentRef.current.scrollHeight, 400);
       setContentHeight(calculatedHeight);
     }
@@ -82,11 +89,11 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
   // ディレクトリが展開されたとき、または内部のグループの展開状態が変わったときに高さを更新
   useEffect(() => {
     updateContentHeight();
-  }, [isExpanded, expandedGroups]);
+  }, [internalIsExpanded, expandedGroups]);
 
   // ResizeObserverを使用してコンテンツの高さ変更を監視
   useEffect(() => {
-    if (!contentRef.current || !isExpanded) return;
+    if (!contentRef.current || !internalIsExpanded) return;
 
     const resizeObserver = new ResizeObserver(() => {
       updateContentHeight();
@@ -99,7 +106,21 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
         resizeObserver.unobserve(contentRef.current);
       }
     };
-  }, [isExpanded]);
+  }, [internalIsExpanded]);
+
+  // ディレクトリアコーディオンの開閉を制御する関数
+  const handleToggleDirectoryAccordion = () => {
+    setIsAnimating(true);
+    setInternalIsExpanded(!internalIsExpanded);
+    
+    // 親コンポーネントの状態も更新
+    toggleDirectoryAccordion();
+    
+    // アニメーション完了後にフラグをリセット
+    setTimeout(() => {
+      setIsAnimating(false);
+    }, 300); // アニメーションの持続時間と同じ
+  };
 
   // 事前にコンテンツをレンダリングしておく
   const renderContent = () => {
@@ -130,11 +151,12 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
       {/* ディレクトリアコーディオンヘッダー */}
       <button
         className="w-full flex items-center justify-between p-2 bg-muted/30 hover:bg-muted/50"
-        onClick={toggleDirectoryAccordion}
+        onClick={handleToggleDirectoryAccordion}
+        disabled={isAnimating} // アニメーション中はクリックを無効化
       >
         <h4 className="font-medium text-foreground text-sm">{directory}</h4>
         <svg 
-          className={`w-4 h-4 transition-transform duration-300 ${isExpanded ? 'transform rotate-180' : ''}`} 
+          className={`w-4 h-4 transition-transform duration-300 ${internalIsExpanded ? 'transform rotate-180' : ''}`} 
           fill="none" 
           stroke="currentColor" 
           viewBox="0 0 24 24" 
@@ -148,9 +170,13 @@ const DirectoryGroup: React.FC<DirectoryGroupProps> = ({
       <div 
         className={`overflow-hidden transition-all custom-scrollbar ${isInitialRender ? '' : 'duration-300'} ease-in-out`}
         style={{ 
-          maxHeight: isExpanded ? (typeof contentHeight === "number" ? `${contentHeight}px` : contentHeight) : "0px",
-          opacity: isExpanded ? 1 : 0,
-          visibility: isExpanded ? 'visible' : 'hidden'
+          maxHeight: internalIsExpanded ? (typeof contentHeight === "number" ? `${contentHeight}px` : contentHeight) : "0px",
+          opacity: internalIsExpanded ? 1 : 0,
+          visibility: internalIsExpanded ? 'visible' : 'hidden'
+        }}
+        onTransitionEnd={() => {
+          // トランジション終了時にアニメーションフラグをリセット
+          setIsAnimating(false);
         }}
       >
         <div ref={contentRef} className="space-y-2 overflow-y-auto custom-scrollbar max-h-[400px]">

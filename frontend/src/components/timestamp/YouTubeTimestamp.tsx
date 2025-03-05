@@ -6,6 +6,7 @@ import { TimestampItem } from './TimestampItem';
 import { MatchupVideo } from '../playlist/VideoItem';
 import AnimatedAccordion from '../ui/AnimatedAccordion';
 import { getCharacterGroupedVideos, getMatchingTimestamps } from '../../utils/videoUtils';
+import DirectoryGroup from '../playlist/DirectoryGroup';
 
 /**
  * YouTubeタイムスタンプコンポーネントのプロパティ
@@ -69,6 +70,40 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
   // 内部状態として使用するための状態を作成
   const [internalIsOpen, setInternalIsOpen] = useState(isOpen);
   const [internalIsPlaylistOpen, setInternalIsPlaylistOpen] = useState(isPlaylistOpen);
+  const [internalActiveTab, setInternalActiveTab] = useState(activeTab);
+  const [isMobile, setIsMobile] = useState(false);
+  const [prevIsMobile, setPrevIsMobile] = useState(false);
+  
+  // モバイル判定
+  useEffect(() => {
+    const checkIfMobile = () => {
+      const newIsMobile = window.innerWidth < 480;
+      setPrevIsMobile(isMobile);
+      setIsMobile(newIsMobile);
+    };
+    
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    
+    return () => {
+      window.removeEventListener('resize', checkIfMobile);
+    };
+  }, [isMobile]);
+  
+  // 画面サイズ変更時の処理
+  useEffect(() => {
+    // モバイルからタブレット以上に変更された場合
+    if (prevIsMobile && !isMobile) {
+      // タブの状態に応じてアコーディオンの状態を設定
+      if (internalActiveTab === 'timestamp') {
+        setInternalIsOpen(true);
+        if (setIsOpen) setIsOpen(true);
+      } else if (internalActiveTab === 'playlist') {
+        setInternalIsPlaylistOpen(true);
+        if (setIsPlaylistOpen) setIsPlaylistOpen(true);
+      }
+    }
+  }, [isMobile, prevIsMobile, internalActiveTab, setIsOpen, setIsPlaylistOpen]);
   
   // 親から渡された状態と同期させる
   useEffect(() => {
@@ -78,6 +113,10 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
   useEffect(() => {
     setInternalIsPlaylistOpen(isPlaylistOpen);
   }, [isPlaylistOpen]);
+  
+  useEffect(() => {
+    setInternalActiveTab(activeTab);
+  }, [activeTab]);
   
   // アコーディオンの開閉状態を管理
   const [expandedGroups, setExpandedGroups] = useState<{[key: string]: boolean}>({});
@@ -106,37 +145,54 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
     setGroupedVideos(grouped);
     
     // ディレクトリごとのアコーディオンの初期状態を設定
-    const initialDirectoryState: {[key: string]: boolean} = {};
-    Object.keys(grouped).forEach((directory) => {
-      // すべてのディレクトリを閉じた状態にする
-      initialDirectoryState[directory] = false;
+    // 既存の状態を保持するため、初期化は一度だけ行う
+    setExpandedDirectories(prev => {
+      // 既存のディレクトリの状態を保持
+      const newState = { ...prev };
+      
+      // 新しいディレクトリがあれば追加
+      Object.keys(grouped).forEach((directory) => {
+        if (newState[directory] === undefined) {
+          newState[directory] = false;
+        }
+      });
+      
+      return newState;
     });
-    setExpandedDirectories(initialDirectoryState);
     
     // キャラクターの組み合わせごとにアコーディオンの初期状態を設定
-    const initialExpandedState: {[key: string]: boolean} = {};
-    videos.forEach(video => {
-      const character1 = characterIcons.find(c => 
-        c.eng.toLowerCase() === video.chara1.toLowerCase() || 
-        c.anotation.some(a => a.toLowerCase() === video.chara1.toLowerCase())
-      );
-      const character2 = characterIcons.find(c => 
-        c.eng.toLowerCase() === video.chara2.toLowerCase() || 
-        c.anotation.some(a => a.toLowerCase() === video.chara2.toLowerCase())
-      );
+    // 既存の状態を保持するため、初期化は一度だけ行う
+    setExpandedGroups(prev => {
+      // 既存のグループの状態を保持
+      const newState = { ...prev };
       
-      if (character1 && character2) {
-        // キャラクター名をアルファベット順にソートして、AvsB と BvsA を同じグループにする
-        const sortedChars = [character1.eng, character2.eng].sort();
-        const charKey = `${sortedChars[0]}-${sortedChars[1]}`;
-        // ディレクトリとキャラクターの組み合わせでユニークなキーを作成
-        const uniqueKey = `${video.directory}-${charKey}`;
-        // 初期状態ではすべてのグループを閉じた状態にする
-        initialExpandedState[uniqueKey] = false;
-      }
+      // 新しいグループがあれば追加
+      videos.forEach(video => {
+        const character1 = characterIcons.find(c => 
+          c.eng.toLowerCase() === video.chara1.toLowerCase() || 
+          c.anotation.some(a => a.toLowerCase() === video.chara1.toLowerCase())
+        );
+        const character2 = characterIcons.find(c => 
+          c.eng.toLowerCase() === video.chara2.toLowerCase() || 
+          c.anotation.some(a => a.toLowerCase() === video.chara2.toLowerCase())
+        );
+        
+        if (character1 && character2) {
+          // キャラクター名をアルファベット順にソートして、AvsB と BvsA を同じグループにする
+          const sortedChars = [character1.eng, character2.eng].sort();
+          const charKey = `${sortedChars[0]}-${sortedChars[1]}`;
+          // ディレクトリとキャラクターの組み合わせでユニークなキーを作成
+          const uniqueKey = `${video.directory}-${charKey}`;
+          
+          // 新しいグループの場合のみ初期化
+          if (newState[uniqueKey] === undefined) {
+            newState[uniqueKey] = false;
+          }
+        }
+      });
+      
+      return newState;
     });
-    
-    setExpandedGroups(initialExpandedState);
   }, [videos, selectedCharacter]);
 
   // 現在選択されている動画のURLと同じURLを持つすべてのマッチアップのタイムスタンプを収集
@@ -175,6 +231,30 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
     }));
   };
 
+  // タブを切り替える関数
+  const handleTabChange = (tab: 'playlist' | 'timestamp') => {
+    setInternalActiveTab(tab);
+    
+    // タブ切り替え時に対応するアコーディオンの状態も更新
+    if (tab === 'timestamp') {
+      setInternalIsOpen(true);
+      if (setIsOpen) setIsOpen(true);
+      
+      if (!independentMode && window.innerWidth < 640) {
+        setInternalIsPlaylistOpen(false);
+        if (setIsPlaylistOpen) setIsPlaylistOpen(false);
+      }
+    } else {
+      setInternalIsPlaylistOpen(true);
+      if (setIsPlaylistOpen) setIsPlaylistOpen(true);
+      
+      if (!independentMode && window.innerWidth < 640) {
+        setInternalIsOpen(false);
+        if (setIsOpen) setIsOpen(false);
+      }
+    }
+  };
+
   // キャラクターが選択されていない場合はメッセージを表示
   if (!selectedCharacter || videos.length === 0) {
     return (
@@ -193,8 +273,92 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
     );
   }
 
+  // スマホサイズ時はタブUIを表示
+  if (isMobile) {
+    return (
+      <div className="youtube-timestamp" style={{ position: 'relative' }}>
+        {/* タブヘッダー */}
+        <div className="flex border-b border-border dark:border-gray-800 mb-4">
+          <button
+            className={`flex-1 py-2 px-4 text-center font-medium ${
+              internalActiveTab === 'timestamp' 
+                ? 'text-primary border-b-2 border-primary' 
+                : 'text-muted-foreground'
+            }`}
+            onClick={() => handleTabChange('timestamp')}
+          >
+            タイムスタンプ
+          </button>
+          <button
+            className={`flex-1 py-2 px-4 text-center font-medium ${
+              internalActiveTab === 'playlist' 
+                ? 'text-primary border-b-2 border-primary' 
+                : 'text-muted-foreground'
+            }`}
+            onClick={() => handleTabChange('playlist')}
+          >
+            検索結果 ({videos.length})
+          </button>
+        </div>
+        
+        {/* タブコンテンツ */}
+        <div className="relative">
+          {/* タイムスタンプコンテンツ */}
+          <div 
+            className={`${internalActiveTab === 'timestamp' ? 'block' : 'hidden'} custom-scrollbar`}
+            style={{ 
+              maxHeight: playerContainerRef?.current 
+                ? `${Math.max(500, playerContainerRef.current.clientHeight - 50)}px` 
+                : '500px',
+              overflowY: 'auto'
+            }}
+          >
+            <div className="px-4">
+              <TimestampList 
+                timestamps={allMatchingTimestamps}
+                onTimestampClick={onTimestampClick}
+                currentTime={currentTime}
+                selectedCharacter={selectedCharacter}
+              />
+            </div>
+          </div>
+          
+          {/* プレイリストコンテンツ */}
+          <div 
+            className={`${internalActiveTab === 'playlist' ? 'block' : 'hidden'} custom-scrollbar`}
+            style={{ 
+              maxHeight: playerContainerRef?.current 
+                ? `${Math.max(500, playerContainerRef.current.clientHeight - 50)}px` 
+                : '500px',
+              overflowY: 'auto'
+            }}
+          >
+            <div className="divide-y divide-border dark:divide-gray-800">
+              {Object.keys(groupedVideos).sort((a, b) => groupedVideos[b].length - groupedVideos[a].length)
+              .map(directory => (
+                <DirectoryGroup
+                  key={directory}
+                  directory={directory}
+                  videos={groupedVideos[directory]}
+                  isExpanded={expandedDirectories[directory]}
+                  toggleDirectoryAccordion={() => toggleDirectoryAccordion(directory)}
+                  expandedGroups={expandedGroups}
+                  toggleAccordion={toggleAccordion}
+                  onVideoSelect={onVideoSelect || (() => {})}
+                  getCharacterGroupedVideos={(videos) => getCharacterGroupedVideos(videos, selectedCharacter)}
+                  selectedVideoUrl={selectedVideoUrl || ''}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // タブレット以上のサイズではアコーディオンを使用
   return (
-    <div className="youtube-timestamp" style={{ position: 'relative' }}>
+    <div className="youtube-timestamp bg-red-500" style={{ position: 'relative' }}>
       <AnimatedAccordion
         title="タイムスタンプ"
         isOpen={internalIsOpen}
@@ -202,13 +366,6 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
           setInternalIsOpen(isOpen);
           if (setIsOpen) {
             setIsOpen(isOpen);
-          }
-          // スマホ表示の場合のみプレイリストを閉じる（独立モードでない場合）
-          if (isOpen && !independentMode && window.innerWidth < 640) {
-            setInternalIsPlaylistOpen(false);
-            if (setIsPlaylistOpen) {
-              setIsPlaylistOpen(false);
-            }
           }
           // player-md以上の場合は、タイムスタンプを開くとプレイリストを閉じる
           if (isOpen && window.matchMedia('(min-width: 1024px)').matches) {
@@ -218,9 +375,10 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
             }
           }
         }}
-        className={`mb-4 player-md:block ${activeTab === 'timestamp' ? 'block' : 'hidden sm:block'}`}
+        className="mb-4 player-md:block"
         contentClassName="px-4"
         playerContainerRef={playerContainerRef}
+        disableAnimationOnMobile={true}
       >
         <TimestampList 
           timestamps={allMatchingTimestamps}
@@ -245,13 +403,6 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
           if (setIsPlaylistOpen) {
             setIsPlaylistOpen(newIsOpen);
           }
-          // スマホ表示の場合のみタイムスタンプを閉じる（独立モードでない場合）
-          if (newIsOpen && !independentMode && window.innerWidth < 640) {
-            setInternalIsOpen(false);
-            if (setIsOpen) {
-              setIsOpen(false);
-            }
-          }
           // player-md以上の場合は、プレイリストを開くとタイムスタンプを閉じる
           if (newIsOpen && window.matchMedia('(min-width: 1024px)').matches) {
             setInternalIsOpen(false);
@@ -261,7 +412,7 @@ const YouTubeTimestamp: React.FC<YouTubeTimestampProps> = ({
           }
         }}
         playerContainerRef={playerContainerRef}
-        className={`player-md:block ${activeTab === 'playlist' ? 'block' : 'hidden sm:block'}`}
+        className="player-md:block"
         selectedVideoUrl={selectedVideoUrl || ''}
       />
     </div>
