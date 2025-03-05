@@ -42,7 +42,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
         <div 
           ref={playerContainerRef}
           className="flex-grow rounded-lg overflow-hidden border border-border dark:border-gray-800 bg-card/5 dark:bg-black/30 shadow-sm dark:shadow-xl
-                    max-h-[80vh] min-h-[480px] w-full flex items-center justify-center" 
+                    xs:max-h-[80vh] xs:min-h-[480px] w-full flex items-center justify-center" 
         >
           {isVideoSelected ? (
             <div className="h-full w-full">
@@ -74,9 +74,8 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
             <div className="text-center p-8">
               <div className="text-4xl mb-4">🎬</div>
               <h3 className="text-xl font-semibold mb-2">動画を選択してください</h3>
-              <p className="text-muted-foreground">
-                右側のプレイリストから再生したい動画を選択してください。<br />
-                プレイリストが閉じている場合は「プレイリスト」ボタンをクリックして開いてください。
+              <p className="text-muted-foreground text-xs xs:text-sm md:text-base">
+                検索結果から再生したい動画を選択してください。<br />                
               </p>
             </div>
           )}
