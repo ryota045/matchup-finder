@@ -1,4 +1,4 @@
-import React, { RefObject } from 'react';
+import React, { RefObject, useEffect, useState } from 'react';
 import YouTubePlayer from './YouTubePlayer';
 
 /**
@@ -35,6 +35,46 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
   isSelectedOpponentCharacters,
   onTimeUpdate
 }) => {
+  // 画面が横向きかどうかを検出するステート
+  const [isLandscape, setIsLandscape] = useState(false);
+  // 画面の短い方の寸法を保持するステート
+  const [shortestDimension, setShortestDimension] = useState(0);
+
+  // 画面の向きと寸法を検出するための関数
+  const checkOrientation = () => {
+    // window.innerWidthとwindow.innerHeightを比較して横向きかどうかを判定
+    const isLandscapeMode = window.innerWidth > window.innerHeight;
+    // 短い方の寸法を取得
+    const shortest = Math.min(window.innerWidth, window.innerHeight);
+    
+    setIsLandscape(isLandscapeMode);
+    setShortestDimension(shortest);
+  };
+
+  // コンポーネントマウント時と画面サイズ変更時に向きをチェック
+  useEffect(() => {
+    // 初期チェック
+    checkOrientation();
+    
+    // リサイズイベントリスナーを追加
+    window.addEventListener('resize', checkOrientation);
+    
+    // 向き変更イベントリスナーを追加（モバイルデバイス用）
+    window.addEventListener('orientationchange', checkOrientation);
+    
+    // クリーンアップ関数
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
+
+  // プレイヤーコンテナのスタイルを動的に生成
+  const playerContainerStyle = {
+    height: isLandscape && window.innerWidth < 768 ? `${shortestDimension}px` : undefined,
+    maxHeight: isLandscape && window.innerWidth < 768 ? `${shortestDimension}px` : undefined
+  };
+
   return (
     <div className="youtube-player-with-timestamps bg-background dark:bg-background flex justify-center">
       <div className="flex flex-col md:flex-row gap-4 w-full">
@@ -43,6 +83,7 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
           ref={playerContainerRef}
           className="flex-grow rounded-lg overflow-hidden border border-border dark:border-gray-800 bg-card/5 dark:bg-black/30 shadow-sm dark:shadow-xl
                     xs:max-h-[80vh] xs:min-h-[480px] w-full flex items-center justify-center" 
+          style={playerContainerStyle}
         >
           {isVideoSelected ? (
             <div className="h-full w-full">
