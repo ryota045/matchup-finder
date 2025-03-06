@@ -187,6 +187,29 @@ export const getCharacterGroupedVideos = (
     }
   });
   
+  // 各グループ内の動画を並び替え
+  Object.keys(charGroups).forEach(key => {
+    charGroups[key].videos.sort((a, b) => {
+      // upload_dateがない場合は後ろに配置
+      if (!a.upload_date) return 1;
+      if (!b.upload_date) return -1;
+      
+      // upload_dateが同じ場合
+      if (a.upload_date === b.upload_date) {
+        // detect_timeがない場合は後ろに配置
+        if (!a.timestamps.length || !a.timestamps[0].originalDetectTime) return 1;
+        if (!b.timestamps.length || !b.timestamps[0].originalDetectTime) return -1;
+        
+        // detect_timeが早い順（小さい値順）に並べる
+        // 時間形式（HH:MM:SS, MM:SS）や数値形式に対応するためparseTimeToSecondsを使用
+        return parseTimeToSeconds(a.timestamps[0].originalDetectTime) - parseTimeToSeconds(b.timestamps[0].originalDetectTime);
+      }
+      
+      // upload_dateが異なる場合は降順（最新順）でソート
+      return new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime();
+    });
+  });
+  
   return charGroups;
 };
 

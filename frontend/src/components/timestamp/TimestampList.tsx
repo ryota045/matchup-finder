@@ -57,15 +57,15 @@ const TimestampList: React.FC<TimestampListProps> = ({
    */
   const getCharacterIcons = (chara1: string, chara2: string) => {
     const character1 = characterIcons.find(c => 
-      c.anotation.some(a => chara1.toLowerCase().includes(a.toLowerCase()))
+      c.anotation.some(a => chara1.toLowerCase() === a.toLowerCase())
     );
     const character2 = characterIcons.find(c => 
-      c.anotation.some(a => chara2.toLowerCase().includes(a.toLowerCase()))
+      c.anotation.some(a => chara2.toLowerCase() === a.toLowerCase())
     );
     
     // 選択されたキャラクターのアイコンを取得
     const selectedCharacterIcon = selectedCharacter ? 
-      characterIcons.find(c => c.anotation.some(a => selectedCharacter.toLowerCase().includes(a.toLowerCase()))) : null;
+      characterIcons.find(c => c.anotation.some(a => selectedCharacter.toLowerCase() === a.toLowerCase())) : null;
     
     // 選択されたキャラクターが存在し、character2と一致する場合はswapする
     if (selectedCharacterIcon && character2 && 
