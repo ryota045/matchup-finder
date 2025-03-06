@@ -58,6 +58,40 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   const urlRef = useRef<string>(url);
   const timeUpdateIntervalRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
+  
+  // 画面が横向きかどうかを検出するステート
+  const [isLandscape, setIsLandscape] = useState(false);
+  // 画面の短い方の寸法を保持するステート
+  const [shortestDimension, setShortestDimension] = useState(0);
+
+  // 画面の向きと寸法を検出するための関数
+  const checkOrientation = () => {
+    // window.innerWidthとwindow.innerHeightを比較して横向きかどうかを判定
+    const isLandscapeMode = window.innerWidth > window.innerHeight;
+    // 短い方の寸法を取得
+    const shortest = Math.min(window.innerWidth, window.innerHeight);
+    
+    setIsLandscape(isLandscapeMode);
+    setShortestDimension(shortest);
+  };
+
+  // コンポーネントマウント時と画面サイズ変更時に向きをチェック
+  useEffect(() => {
+    // 初期チェック
+    checkOrientation();
+    
+    // リサイズイベントリスナーを追加
+    window.addEventListener('resize', checkOrientation);
+    
+    // 向き変更イベントリスナーを追加（モバイルデバイス用）
+    window.addEventListener('orientationchange', checkOrientation);
+    
+    // クリーンアップ関数
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
 
   // URLが変更されたときに埋め込みURLを更新
   useEffect(() => {
@@ -199,8 +233,13 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
     }
   };
 
+  // プレイヤーコンテナのスタイルを動的に生成
+  const containerStyle = {
+    height: isLandscape && window.innerWidth < 768 ? `${shortestDimension}px` : '100%',
+  };
+
   return (
-    <div className="youtube-player-container border border-border dark:border-gray-800 bg-black aspect-ratio-16/9 w-full h-full">
+    <div className="youtube-player-container border border-border dark:border-gray-800 bg-black aspect-ratio-16/9 w-full h-full" style={containerStyle}>
       {embedUrl ? (
         <div id="youtube-player" className="w-full h-full"></div>
       ) : (

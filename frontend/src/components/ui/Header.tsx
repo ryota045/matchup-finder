@@ -29,6 +29,9 @@ const Header: React.FC = () => {
         
         // YouTubeプレーヤーの上部とヘッダーの下部が接触したかどうか
         const isPlayerTouchingHeader = playerRect.top <= headerHeight;
+
+        console.log("playerRect.top", playerRect.top);
+        console.log("playerRect.y", playerRect.y);
         
         // スクロール方向を検出
         const isScrollingDown = currentScrollY > lastScrollY.current;
@@ -36,7 +39,7 @@ const Header: React.FC = () => {
         // プレーヤーがヘッダーに接触していて、下にスクロールしている場合はヘッダーを非表示
         if (isPlayerTouchingHeader && isScrollingDown) {
           setIsHeaderVisible(false);
-        } else if (!isScrollingDown) {
+        } else if (!isScrollingDown && !isPlayerTouchingHeader) {
           // 上にスクロールしている場合はヘッダーを表示
           setIsHeaderVisible(true);
         }
