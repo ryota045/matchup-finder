@@ -195,18 +195,24 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   const handleVideoSelect = (url: string) => {
     // 選択された動画のURLを直接設定
     if (url) {
-      setCurrentUrl(url);
-      setSelectedVideoUrl(url); // 選択された動画のURLを保存
-
-      // url からtimestampを取得
-      const timestamp = extractTimestampFromUrl(url);
-      setCurrentTime(timestamp || 0);
+      // 現在のURLと同じ場合でも、強制的に再読み込みするために一度空にする
+      setCurrentUrl('');
       
-      // URLに一致する動画を検索
-      const foundVideo = [...videos, ...allVideos].find(video => video.url === url);
-      if (foundVideo) {
-        setCurrentVideo(foundVideo);
-      }
+      // 非同期で実行して、URLの変更が反映されるようにする
+      setTimeout(() => {
+        setCurrentUrl(url);
+        setSelectedVideoUrl(url); // 選択された動画のURLを保存
+
+        // url からtimestampを取得
+        const timestamp = extractTimestampFromUrl(url);
+        setCurrentTime(timestamp || 0);
+        
+        // URLに一致する動画を検索
+        const foundVideo = [...videos, ...allVideos].find(video => video.url === url);
+        if (foundVideo) {
+          setCurrentVideo(foundVideo);
+        }
+      }, 50);
     }
   };
 
