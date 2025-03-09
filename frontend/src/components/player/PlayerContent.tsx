@@ -1,5 +1,6 @@
-import React, { RefObject, useEffect, useState } from 'react';
+import React, { RefObject } from 'react';
 import YouTubePlayer from './YouTubePlayer';
+import useOrientation from '@/hooks/useOrientation';
 
 /**
  * プレイヤーコンテンツのプロパティ
@@ -35,39 +36,8 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
   isSelectedOpponentCharacters,
   onTimeUpdate
 }) => {
-  // 画面が横向きかどうかを検出するステート
-  const [isLandscape, setIsLandscape] = useState(false);
-  // 画面の短い方の寸法を保持するステート
-  const [shortestDimension, setShortestDimension] = useState(0);
-
-  // 画面の向きと寸法を検出するための関数
-  const checkOrientation = () => {
-    // window.innerWidthとwindow.innerHeightを比較して横向きかどうかを判定
-    const isLandscapeMode = window.innerWidth > window.innerHeight;
-    // 短い方の寸法を取得
-    const shortest = Math.min(window.innerWidth, window.innerHeight);
-    
-    setIsLandscape(isLandscapeMode);
-    setShortestDimension(shortest);
-  };
-
-  // コンポーネントマウント時と画面サイズ変更時に向きをチェック
-  useEffect(() => {
-    // 初期チェック
-    checkOrientation();
-    
-    // リサイズイベントリスナーを追加
-    window.addEventListener('resize', checkOrientation);
-    
-    // 向き変更イベントリスナーを追加（モバイルデバイス用）
-    window.addEventListener('orientationchange', checkOrientation);
-    
-    // クリーンアップ関数
-    return () => {
-      window.removeEventListener('resize', checkOrientation);
-      window.removeEventListener('orientationchange', checkOrientation);
-    };
-  }, []);
+  // 画面の向きと寸法を管理するカスタムフック
+  const { isLandscape, shortestDimension } = useOrientation();
 
   // プレイヤーコンテナのスタイルを動的に生成
   const playerContainerStyle = {
@@ -93,37 +63,73 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
                 onTimeUpdate={onTimeUpdate}
               />
             </div>
-          ) : !isSelectedCharacter ? (
-            <div className="text-center p-8">
-              <div className="text-4xl mb-4">👾</div>
-              <h3 className="text-xl font-semibold mb-2">キャラクターを選択してください</h3>
-              <p className="text-muted-foreground">
-                上部のキャラクターセレクターから使用キャラクターを選択すると、
-                対応する動画が表示されます。
-              </p>
-            </div>
-          ) : !isSelectedOpponentCharacters ? (
-            <div className="text-center p-8">
-              <div className="text-4xl mb-4">🆚</div>
-              <h3 className="text-xl font-semibold mb-2">対戦キャラクターを選択してください</h3>
-              <p className="text-muted-foreground">
-                上部のキャラクターセレクターから対戦キャラクターを1体以上選択すると、
-                マッチアップ動画が表示されます。
-              </p>
-            </div>
           ) : (
-            <div className="text-center p-8">
-              <div className="text-4xl mb-4">🎬</div>
-              <h3 className="text-xl font-semibold mb-2">動画を選択してください</h3>
-              <p className="text-muted-foreground text-xs xs:text-sm md:text-base">
-                検索結果から再生したい動画を選択してください。<br />                
-              </p>
-            </div>
+            <SelectionPrompt 
+              isSelectedCharacter={isSelectedCharacter}
+              isSelectedOpponentCharacters={isSelectedOpponentCharacters}
+            />
           )}
         </div>
       </div>
     </div>
   );
+};
+
+/**
+ * 選択プロンプトのプロパティ
+ * @interface SelectionPromptProps
+ * @property {boolean} isSelectedCharacter - キャラクターが選択されているかどうか
+ * @property {boolean} isSelectedOpponentCharacters - 対戦キャラクターが選択されているかどうか
+ */
+interface SelectionPromptProps {
+  isSelectedCharacter: boolean;
+  isSelectedOpponentCharacters: boolean;
+}
+
+/**
+ * 選択プロンプトコンポーネント
+ * 
+ * キャラクター選択や動画選択を促すメッセージを表示します。
+ * 
+ * @component
+ */
+const SelectionPrompt: React.FC<SelectionPromptProps> = ({
+  isSelectedCharacter,
+  isSelectedOpponentCharacters
+}) => {
+  if (!isSelectedCharacter) {
+    return (
+      <div className="text-center p-8">
+        <div className="text-4xl mb-4">👾</div>
+        <h3 className="text-xl font-semibold mb-2">キャラクターを選択してください</h3>
+        <p className="text-muted-foreground">
+          上部のキャラクターセレクターから使用キャラクターを選択すると、
+          対応する動画が表示されます。
+        </p>
+      </div>
+    );
+  } else if (!isSelectedOpponentCharacters) {
+    return (
+      <div className="text-center p-8">
+        <div className="text-4xl mb-4">🆚</div>
+        <h3 className="text-xl font-semibold mb-2">対戦キャラクターを選択してください</h3>
+        <p className="text-muted-foreground">
+          上部のキャラクターセレクターから対戦キャラクターを1体以上選択すると、
+          マッチアップ動画が表示されます。
+        </p>
+      </div>
+    );
+  } else {
+    return (
+      <div className="text-center p-8">
+        <div className="text-4xl mb-4">🎬</div>
+        <h3 className="text-xl font-semibold mb-2">動画を選択してください</h3>
+        <p className="text-muted-foreground text-xs xs:text-sm md:text-base">
+          検索結果から再生したい動画を選択してください。<br />                
+        </p>
+      </div>
+    );
+  }
 };
 
 export default PlayerContent; 

@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { createEmbedUrl, extractStartTime } from '../../utils/YouTubeUtils';
+import useOrientation from '@/hooks/useOrientation';
 
 /**
  * YouTubeプレーヤーコンポーネントのプロパティ
@@ -59,43 +60,11 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   const timeUpdateIntervalRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
   
-  // 画面が横向きかどうかを検出するステート
-  const [isLandscape, setIsLandscape] = useState(false);
-  // 画面の短い方の寸法を保持するステート
-  const [shortestDimension, setShortestDimension] = useState(0);
-
-  // 画面の向きと寸法を検出するための関数
-  const checkOrientation = () => {
-    // window.innerWidthとwindow.innerHeightを比較して横向きかどうかを判定
-    const isLandscapeMode = window.innerWidth > window.innerHeight;
-    // 短い方の寸法を取得
-    const shortest = Math.min(window.innerWidth, window.innerHeight);
-    
-    setIsLandscape(isLandscapeMode);
-    setShortestDimension(shortest);
-  };
-
-  // コンポーネントマウント時と画面サイズ変更時に向きをチェック
-  useEffect(() => {
-    // 初期チェック
-    checkOrientation();
-    
-    // リサイズイベントリスナーを追加
-    window.addEventListener('resize', checkOrientation);
-    
-    // 向き変更イベントリスナーを追加（モバイルデバイス用）
-    window.addEventListener('orientationchange', checkOrientation);
-    
-    // クリーンアップ関数
-    return () => {
-      window.removeEventListener('resize', checkOrientation);
-      window.removeEventListener('orientationchange', checkOrientation);
-    };
-  }, []);
+  // 画面の向きと寸法を管理するカスタムフック
+  const { isLandscape, shortestDimension } = useOrientation();
 
   // URLが変更されたときに埋め込みURLを更新
   useEffect(() => {
-    // console.log('YouTubePlayer: URLが更新されました', url);
     const newEmbedUrl = createEmbedUrl(url, autoplay);
     setEmbedUrl(newEmbedUrl);
     urlRef.current = url;
@@ -190,7 +159,10 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
     };
   }, [url, autoplay]);
 
-  // プレーヤーの準備完了時の処理
+  /**
+   * プレーヤーの準備完了時の処理
+   * @param event YouTubeプレーヤーイベント
+   */
   const onPlayerReady = (event: any) => {
     // URLからスタート時間を抽出して、その時間からスタート
     const startTime = extractStartTime(urlRef.current);
@@ -210,7 +182,6 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
         if (Math.abs(time - lastTimeRef.current) > 0.1) {
           setCurrentTime(time);
           lastTimeRef.current = time;
-          // console.log("現在の再生時間:", time);
           if (onTimeUpdate) {
             onTimeUpdate(time);
           }
@@ -219,14 +190,16 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
     }, 500); // 500ミリ秒ごとに更新
   };
 
-  // 再生状態が変化したときの処理
+  /**
+   * 再生状態が変化したときの処理
+   * @param event YouTubeプレーヤーイベント
+   */
   const onPlayerStateChange = (event: any) => {
     // 再生中の場合は現在の再生時間を取得
     if (event.data === window.YT.PlayerState.PLAYING) {
       const time = event.target.getCurrentTime();
       setCurrentTime(time);
       lastTimeRef.current = time;
-      // console.log("再生開始時の時間:", time);
       if (onTimeUpdate) {
         onTimeUpdate(time);
       }
@@ -243,16 +216,25 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
       {embedUrl ? (
         <div id="youtube-player" className="w-full h-full"></div>
       ) : (
-        <div className="flex items-center justify-center h-full w-full">
-          <div className="text-primary animate-pulse flex items-center">
-            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            動画を読み込み中...
-          </div>
-        </div>
+        <LoadingIndicator />
       )}
+    </div>
+  );
+};
+
+/**
+ * 読み込み中を表示するコンポーネント
+ */
+const LoadingIndicator: React.FC = () => {
+  return (
+    <div className="flex items-center justify-center h-full w-full">
+      <div className="text-primary animate-pulse flex items-center">
+        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span>読み込み中...</span>
+      </div>
     </div>
   );
 };

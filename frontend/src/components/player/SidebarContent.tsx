@@ -5,6 +5,7 @@ import Playlist from '../playlist/Playlist';
 import YouTubeTimestamp from '../timestamp/YouTubeTimestamp';
 import { MatchupVideo } from '../playlist/VideoItem';
 import { TimestampItem } from '../timestamp/TimestampItem';
+import { extractVideoId } from '@/utils/YouTubeUtils';
 
 /**
  * サイドバーコンテンツのプロパティ
@@ -85,7 +86,10 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
   getCharacterGroupedVideos,
   selectedVideoUrl
 }) => {
-  // 現在の動画のタイムスタンプを取得
+  /**
+   * 現在の動画のタイムスタンプを取得
+   * @returns 現在の動画のタイムスタンプリスト
+   */
   const getCurrentVideoTimestamps = (): TimestampItem[] => {
     if (!hasRequiredCharacters || !currentUrl) {
       return [];
@@ -106,19 +110,11 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
       return [];
     }).sort((a, b) => a.time - b.time);
   };
-  
-  // URLからビデオIDを抽出する関数
-  const extractVideoId = (url: string): string | null => {
-    if (!url) return null;
-    
-    // YouTubeの標準的なURL形式からIDを抽出
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    
-    return (match && match[2].length === 11) ? match[2] : null;
-  };
 
-  // タイムスタンプアコーディオンの開閉を制御する関数
+  /**
+   * タイムスタンプアコーディオンの開閉を制御する関数
+   * @param isOpen アコーディオンを開くかどうか
+   */
   const handleTimestampAccordionToggle = (isOpen: boolean) => {
     handleTimestampToggle(isOpen);
     
@@ -128,7 +124,10 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
     }
   };
   
-  // プレイリストアコーディオンの開閉を制御する関数
+  /**
+   * プレイリストアコーディオンの開閉を制御する関数
+   * @param isOpen アコーディオンを開くかどうか
+   */
   const handlePlaylistAccordionToggle = (isOpen: boolean) => {
     handlePlaylistToggle(isOpen);
     
@@ -160,8 +159,6 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
       return new Date(b.upload_date).getTime() - new Date(a.upload_date).getTime();
     });
   });
-
-  // console.log("selectedCharacter", selectedCharacter);
   
   return (
     <div className="w-full">
@@ -169,45 +166,29 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
       <div className="player-md:block">
         {/* タブレット以上の表示時は横並び、デスクトップ表示時は縦並び */}
         <div className="hidden xs:flex xs:flex-row md:flex-row player-md:flex-col xs:gap-2 md:gap-3 player-md:gap-0">
-          <div className={`xs:w-1/2 md:w-1/2 player-md:w-full flex-shrink-0 flex-grow`}>
-            <AnimatedAccordion
-              title="タイムスタンプ"
-              isOpen={isTimestampOpen}
-              onToggle={handleTimestampAccordionToggle}
-              className="mb-2 player-md:mb-4"
-              contentClassName="px-2 sm:px-3 md:px-4"
-              playerContainerRef={playerContainerRef}              
-              disableAnimationOnMobile={true}
-            >
-              <div className="bg-gradient-to-r from-primary/5 to-transparent p-1 rounded-lg mb-2">
-                <h3 className="text-sm font-medium text-primary/80">現在の動画: {getCurrentVideoTimestamps().length}件</h3>
-              </div>
-              <TimestampList 
-                timestamps={getCurrentVideoTimestamps()}
-                onTimestampClick={handleTimestampClick}
-                currentTime={currentTime}
-                selectedCharacter={selectedCharacter}
-              />
-            </AnimatedAccordion>
-          </div>
-          <div className="xs:w-1/2 md:w-1/2 player-md:w-full flex-shrink-0 flex-grow">
-            {/* キャラクターアイコン付きプレイリスト */}
-            <Playlist
-              videos={sortedVideos}
-              groupedVideos={sortedGroupedVideos}
-              expandedDirectories={expandedDirectories}
-              expandedGroups={expandedGroups}
-              isOpen={isPlaylistOpen}
-              toggleDirectoryAccordion={toggleDirectoryAccordion}
-              toggleAccordion={toggleAccordion}
-              onVideoSelect={handleVideoSelect}
-              getCharacterGroupedVideos={getCharacterGroupedVideos}
-              setIsOpen={handlePlaylistAccordionToggle}
-              playerContainerRef={playerContainerRef}
-              className="mb-2"
-              selectedVideoUrl={selectedVideoUrl}
-            />
-          </div>
+          <TimestampSection 
+            isTimestampOpen={isTimestampOpen}
+            handleTimestampAccordionToggle={handleTimestampAccordionToggle}
+            playerContainerRef={playerContainerRef}
+            timestamps={getCurrentVideoTimestamps()}
+            handleTimestampClick={handleTimestampClick}
+            currentTime={currentTime}
+            selectedCharacter={selectedCharacter}
+          />
+          <PlaylistSection 
+            sortedVideos={sortedVideos}
+            sortedGroupedVideos={sortedGroupedVideos}
+            expandedDirectories={expandedDirectories}
+            expandedGroups={expandedGroups}
+            isPlaylistOpen={isPlaylistOpen}
+            toggleDirectoryAccordion={toggleDirectoryAccordion}
+            toggleAccordion={toggleAccordion}
+            handleVideoSelect={handleVideoSelect}
+            getCharacterGroupedVideos={getCharacterGroupedVideos}
+            handlePlaylistAccordionToggle={handlePlaylistAccordionToggle}
+            playerContainerRef={playerContainerRef}
+            selectedVideoUrl={selectedVideoUrl}
+          />
         </div>
         
         {/* スマホ表示用のレイアウト */}
@@ -233,6 +214,122 @@ const SidebarContent: React.FC<SidebarContentProps> = ({
           />
         </div>
       </div>
+    </div>
+  );
+};
+
+/**
+ * タイムスタンプセクションのプロパティ
+ * @interface TimestampSectionProps
+ */
+interface TimestampSectionProps {
+  isTimestampOpen: boolean;
+  handleTimestampAccordionToggle: (isOpen: boolean) => void;
+  playerContainerRef: RefObject<HTMLDivElement | null>;
+  timestamps: TimestampItem[];
+  handleTimestampClick: (time: number) => void;
+  currentTime: number;
+  selectedCharacter?: string;
+}
+
+/**
+ * タイムスタンプセクションコンポーネント
+ * 
+ * タイムスタンプリストを表示するセクションを提供します。
+ * 
+ * @component
+ */
+const TimestampSection: React.FC<TimestampSectionProps> = ({
+  isTimestampOpen,
+  handleTimestampAccordionToggle,
+  playerContainerRef,
+  timestamps,
+  handleTimestampClick,
+  currentTime,
+  selectedCharacter
+}) => {
+  return (
+    <div className={`xs:w-1/2 md:w-1/2 player-md:w-full flex-shrink-0 flex-grow`}>
+      <AnimatedAccordion
+        title="タイムスタンプ"
+        isOpen={isTimestampOpen}
+        onToggle={handleTimestampAccordionToggle}
+        className="mb-2 player-md:mb-4"
+        contentClassName="px-2 sm:px-3 md:px-4"
+        playerContainerRef={playerContainerRef}              
+        disableAnimationOnMobile={true}
+      >
+        <div className="bg-gradient-to-r from-primary/5 to-transparent p-1 rounded-lg mb-2">
+          <h3 className="text-sm font-medium text-primary/80">現在の動画: {timestamps.length}件</h3>
+        </div>
+        <TimestampList 
+          timestamps={timestamps}
+          onTimestampClick={handleTimestampClick}
+          currentTime={currentTime}
+          selectedCharacter={selectedCharacter}
+        />
+      </AnimatedAccordion>
+    </div>
+  );
+};
+
+/**
+ * プレイリストセクションのプロパティ
+ * @interface PlaylistSectionProps
+ */
+interface PlaylistSectionProps {
+  sortedVideos: MatchupVideo[];
+  sortedGroupedVideos: {[key: string]: MatchupVideo[]};
+  expandedDirectories: {[key: string]: boolean};
+  expandedGroups: {[key: string]: boolean};
+  isPlaylistOpen: boolean;
+  toggleDirectoryAccordion: (directory: string) => void;
+  toggleAccordion: (directory: string, charKey: string) => void;
+  handleVideoSelect: (url: string) => void;
+  getCharacterGroupedVideos: (videos: MatchupVideo[]) => any;
+  handlePlaylistAccordionToggle: (isOpen: boolean) => void;
+  playerContainerRef: RefObject<HTMLDivElement | null>;
+  selectedVideoUrl: string;
+}
+
+/**
+ * プレイリストセクションコンポーネント
+ * 
+ * プレイリストを表示するセクションを提供します。
+ * 
+ * @component
+ */
+const PlaylistSection: React.FC<PlaylistSectionProps> = ({
+  sortedVideos,
+  sortedGroupedVideos,
+  expandedDirectories,
+  expandedGroups,
+  isPlaylistOpen,
+  toggleDirectoryAccordion,
+  toggleAccordion,
+  handleVideoSelect,
+  getCharacterGroupedVideos,
+  handlePlaylistAccordionToggle,
+  playerContainerRef,
+  selectedVideoUrl
+}) => {
+  return (
+    <div className="xs:w-1/2 md:w-1/2 player-md:w-full flex-shrink-0 flex-grow">
+      <Playlist
+        videos={sortedVideos}
+        groupedVideos={sortedGroupedVideos}
+        expandedDirectories={expandedDirectories}
+        expandedGroups={expandedGroups}
+        isOpen={isPlaylistOpen}
+        toggleDirectoryAccordion={toggleDirectoryAccordion}
+        toggleAccordion={toggleAccordion}
+        onVideoSelect={handleVideoSelect}
+        getCharacterGroupedVideos={getCharacterGroupedVideos}
+        setIsOpen={handlePlaylistAccordionToggle}
+        playerContainerRef={playerContainerRef}
+        className="mb-2"
+        selectedVideoUrl={selectedVideoUrl}
+      />
     </div>
   );
 };
