@@ -58,7 +58,7 @@ const useVideoSelection = (videos: MatchupVideo[], allVideos: MatchupVideo[]) =>
         if (foundVideo) {
           setCurrentVideo(foundVideo);
         }
-      }, 50);
+      }, 300);
     }
   }, [videos, allVideos]);
 
