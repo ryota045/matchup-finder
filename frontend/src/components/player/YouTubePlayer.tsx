@@ -75,6 +75,20 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
       if (playerRef.current) {
         playerRef.current.destroy();
         playerInitializedRef.current = false;
+        
+        // プレーヤーの破棄後、DOMの更新を確実にするために少し待つ
+        const playerElement = document.getElementById('youtube-player');
+        if (playerElement) {
+          // 既存の要素を削除して再作成
+          const parentElement = playerElement.parentElement;
+          if (parentElement) {
+            parentElement.removeChild(playerElement);
+            const newPlayerElement = document.createElement('div');
+            newPlayerElement.id = 'youtube-player';
+            newPlayerElement.className = 'w-full h-full';
+            parentElement.appendChild(newPlayerElement);
+          }
+        }
       }
       
       // 少し遅延させてから再初期化
@@ -96,7 +110,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
         });
         
         playerInitializedRef.current = true;
-      }, 100);
+      }, 300); // 100ミリ秒から300ミリ秒に増やす
     }
   }, [url, autoplay]);
 
@@ -214,7 +228,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   return (
     <div className="youtube-player-container border border-border dark:border-gray-800 bg-black aspect-ratio-16/9 w-full h-full" style={containerStyle}>
       {embedUrl ? (
-        <div id="youtube-player" className="w-full h-full"></div>
+        <div id="youtube-player" className="w-full h-full" key={embedUrl}></div>
       ) : (
         <LoadingIndicator />
       )}
