@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { MatchupVideo } from '@/components/playlist/VideoItem';
 import { extractTimestampFromUrl, extractVideoId } from '@/utils/YouTubeUtils';
 
@@ -15,71 +15,114 @@ const useVideoSelection = (videos: MatchupVideo[], allVideos: MatchupVideo[]) =>
   const [currentVideo, setCurrentVideo] = useState<MatchupVideo | null>(null);
   const [selectedVideoUrl, setSelectedVideoUrl] = useState<string>('');
   const [isChangingVideo, setIsChangingVideo] = useState(false);
+  
+  // タイムアウト参照
   const changeVideoTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const resetChangingFlagTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  // コンポーネントのアンマウント時にタイムアウトをクリア
+  useEffect(() => {
+    return () => {
+      if (changeVideoTimeoutRef.current) {
+        clearTimeout(changeVideoTimeoutRef.current);
+        changeVideoTimeoutRef.current = null;
+      }
+      if (resetChangingFlagTimeoutRef.current) {
+        clearTimeout(resetChangingFlagTimeoutRef.current);
+        resetChangingFlagTimeoutRef.current = null;
+      }
+    };
+  }, []);
 
   /**
    * タイムスタンプがクリックされたときの処理
    * @param time クリックされたタイムスタンプの時間（秒）
    */
   const handleTimestampClick = useCallback((time: number) => {
-    // 現在のURLからビデオIDを抽出
-    const videoId = extractVideoId(currentUrl);
-    if (!videoId) return;
-    
-    // 新しいURLを生成（タイムスタンプ付き、自動再生有効）
-    const newUrl = `https://www.youtube.com/watch?v=${videoId}&t=${time}`;
-    setCurrentUrl(newUrl);
-    
-    // 現在の再生時間を即座に更新
-    setCurrentTime(time);
-    
-    // 現在の動画情報は維持（URLが変わっても同じ動画なので）
-  }, [currentUrl]);
+    try {
+      // 既に動画変更中の場合は処理をスキップ
+      if (isChangingVideo) return;
+      
+      // 前回のタイムアウトがあればクリア
+      if (resetChangingFlagTimeoutRef.current) {
+        clearTimeout(resetChangingFlagTimeoutRef.current);
+        resetChangingFlagTimeoutRef.current = null;
+      }
+      
+      // 現在のURLからビデオIDを抽出
+      const videoId = extractVideoId(currentUrl);
+      if (!videoId) return;
+      
+      // 動画変更中フラグをセット（タイムスタンプ変更時も同様に）
+      setIsChangingVideo(true);
+      
+      // 新しいURLを生成（タイムスタンプ付き）
+      const newUrl = `https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(time)}`;
+      
+      // 現在の再生時間を即座に更新
+      setCurrentTime(time);
+      
+      // URLを更新
+      setCurrentUrl(newUrl);
+      
+      // 動画変更中フラグをリセット（少し遅延させる）
+      resetChangingFlagTimeoutRef.current = setTimeout(() => {
+        setIsChangingVideo(false);
+      }, 500);
+    } catch (error) {
+      console.error('Error in handleTimestampClick:', error);
+      setIsChangingVideo(false);
+    }
+  }, [currentUrl, isChangingVideo]);
 
   /**
    * 動画が選択されたときの処理
    * @param url 選択された動画のURL
    */
   const handleVideoSelect = useCallback((url: string) => {
-    // 既に動画変更中の場合は処理をスキップ
-    if (isChangingVideo) return;
+    // 無効なURLや既に動画変更中の場合は処理をスキップ
+    if (!url || isChangingVideo) return;
     
-    // 選択された動画のURLを直接設定
-    if (url) {
-      // 動画変更中フラグをセット
-      setIsChangingVideo(true);
-      
+    try {
       // 前回のタイムアウトがあればクリア
       if (changeVideoTimeoutRef.current) {
         clearTimeout(changeVideoTimeoutRef.current);
+        changeVideoTimeoutRef.current = null;
+      }
+      if (resetChangingFlagTimeoutRef.current) {
+        clearTimeout(resetChangingFlagTimeoutRef.current);
+        resetChangingFlagTimeoutRef.current = null;
       }
       
-      // 現在のURLを空にして、プレーヤーをリセット
-      setCurrentUrl('');
-      setCurrentVideo(null);
+      // 動画変更中フラグをセット
+      setIsChangingVideo(true);
       
-      // 少し遅延させてから新しい動画を設定
-      changeVideoTimeoutRef.current = setTimeout(() => {
-        // URLに一致する動画を検索
-        const foundVideo = [...videos, ...allVideos].find(video => video.url === url);
-        
-        // 新しい動画情報を設定
-        setSelectedVideoUrl(url);
-        setCurrentUrl(url);
-        
-        if (foundVideo) {
-          setCurrentVideo(foundVideo);
-        }
-        
-        // タイムスタンプを取得して設定
-        const timestamp = extractTimestampFromUrl(url);
-        setCurrentTime(timestamp || 0);
-        
-        // 動画変更中フラグをリセット
-        setTimeout(() => {
-          setIsChangingVideo(false);
-        }, 500);
-      }, 500);
+      // URLに一致する動画を検索
+      const foundVideo = [...videos, ...allVideos].find(video => video.url === url);
+      
+      // 選択された動画URLを設定
+      setSelectedVideoUrl(url);
+      
+      // タイムスタンプを取得
+      const timestamp = extractTimestampFromUrl(url);
+      
+      // 新しい動画情報を設定
+      setCurrentUrl(url);
+      
+      if (foundVideo) {
+        setCurrentVideo(foundVideo);
+      }
+      
+      // タイムスタンプを設定
+      setCurrentTime(timestamp || 0);
+      
+      // 動画変更中フラグをリセット（少し遅延させる）
+      resetChangingFlagTimeoutRef.current = setTimeout(() => {
+        setIsChangingVideo(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error in handleVideoSelect:', error);
+      setIsChangingVideo(false);
     }
   }, [videos, allVideos, isChangingVideo]);
 

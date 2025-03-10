@@ -58,21 +58,21 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
                     xs:max-h-[80vh] xs:min-h-[480px] w-full flex items-center justify-center" 
           style={playerContainerStyle}
         >
-          {isVideoSelected ? (
-            <div className="h-full w-full">
-              <YouTubePlayer 
-                url={currentUrl} 
-                autoplay={true}
-                onTimeUpdate={onTimeUpdate}
-              />
-            </div>
-          ) : isChangingVideo ? (
+          {isChangingVideo ? (
             <div className="text-center p-8">
               <div className="text-4xl mb-4">🔄</div>
               <h3 className="text-xl font-semibold mb-2">動画を切り替え中...</h3>
               <div className="flex justify-center mt-4">
                 <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
               </div>
+            </div>
+          ) : isVideoSelected ? (
+            <div className="h-full w-full">
+              <YouTubePlayer 
+                url={currentUrl} 
+                autoplay={true}
+                onTimeUpdate={onTimeUpdate}
+              />
             </div>
           ) : (
             <SelectionPrompt 
