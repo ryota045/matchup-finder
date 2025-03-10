@@ -52,69 +52,22 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   autoplay = false,
   onTimeUpdate
 }) => {
-  const [embedUrl, setEmbedUrl] = useState<string>('');
-  const [currentTime, setCurrentTime] = useState(0);
+  // プレーヤーの状態を管理
+  const [playerReady, setPlayerReady] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [videoId, setVideoId] = useState<string | null>(null);
+  const [playerId] = useState(`youtube-player-${Math.random().toString(36).substring(2, 9)}`);
+  
+  // 参照を管理
   const playerRef = useRef<any | null>(null);
-  const playerInitializedRef = useRef<boolean>(false);
-  const urlRef = useRef<string>(url);
   const timeUpdateIntervalRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
+  const urlRef = useRef<string>(url);
   
   // 画面の向きと寸法を管理するカスタムフック
   const { isLandscape, shortestDimension } = useOrientation();
 
-  // URLが変更されたときに埋め込みURLを更新
-  useEffect(() => {
-    const newEmbedUrl = createEmbedUrl(url, autoplay);
-    setEmbedUrl(newEmbedUrl);
-    urlRef.current = url;
-    
-    // URLが変更されたら、プレーヤーを再初期化する
-    if (window.YT && window.YT.Player && playerInitializedRef.current) {
-      // 既存のプレーヤーを破棄
-      if (playerRef.current) {
-        playerRef.current.destroy();
-        playerInitializedRef.current = false;
-        
-        // プレーヤーの破棄後、DOMの更新を確実にするために少し待つ
-        const playerElement = document.getElementById('youtube-player');
-        if (playerElement) {
-          // 既存の要素を削除して再作成
-          const parentElement = playerElement.parentElement;
-          if (parentElement) {
-            parentElement.removeChild(playerElement);
-            const newPlayerElement = document.createElement('div');
-            newPlayerElement.id = 'youtube-player';
-            newPlayerElement.className = 'w-full h-full';
-            parentElement.appendChild(newPlayerElement);
-          }
-        }
-      }
-      
-      // 少し遅延させてから再初期化
-      setTimeout(() => {
-        const videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
-        if (!videoId) return;
-        
-        playerRef.current = new window.YT.Player('youtube-player', {
-          videoId: videoId,
-          events: {
-            onReady: onPlayerReady,
-            onStateChange: onPlayerStateChange,
-          },
-          playerVars: {
-            autoplay: autoplay ? 1 : 0,
-            rel: 0,
-            modestbranding: 1,
-          }
-        });
-        
-        playerInitializedRef.current = true;
-      }, 300); // 100ミリ秒から300ミリ秒に増やす
-    }
-  }, [url, autoplay]);
-
-  // YouTube IFrame APIの読み込みと初期化
+  // YouTube IFrame APIの読み込み
   useEffect(() => {
     // YouTube IFrame APIがまだ読み込まれていない場合は読み込む
     if (!window.YT) {
@@ -124,60 +77,105 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
       if (firstScriptTag && firstScriptTag.parentNode) {
         firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
       }
+
+      // APIが読み込まれたときのコールバック
+      window.onYouTubeIframeAPIReady = () => {
+        setPlayerReady(true);
+      };
+    } else {
+      // 既にAPIが読み込まれている場合
+      setPlayerReady(true);
     }
 
-    // プレーヤーの初期化関数
-    const initializePlayer = () => {
-      if (playerRef.current) {
-        playerRef.current.destroy(); // 既存のプレーヤーを破棄
-      }
-
-      const videoId = url.includes('v=') ? url.split('v=')[1].split('&')[0] : url.split('/').pop();
-      
-      if (!videoId) return;
-
-      playerRef.current = new window.YT.Player('youtube-player', {
-        videoId: videoId,
-        events: {
-          onReady: onPlayerReady,
-          onStateChange: onPlayerStateChange,
-        },
-        playerVars: {
-          autoplay: autoplay ? 1 : 0,
-          rel: 0,
-          modestbranding: 1,
-        }
-      });
-
-      playerInitializedRef.current = true;
-    };
-
-    // YouTube IFrame APIが読み込まれたときに呼び出される関数
-    window.onYouTubeIframeAPIReady = () => {
-      initializePlayer();
-    };
-
-    // YouTube IFrame APIが既に読み込まれている場合は直接初期化
-    if (window.YT && window.YT.Player) {
-      initializePlayer();
-    }
-
-    // コンポーネントのクリーンアップ
+    // クリーンアップ
     return () => {
-      if (playerRef.current) {
-        playerRef.current.destroy();
-      }
-      if (timeUpdateIntervalRef.current) {
-        clearInterval(timeUpdateIntervalRef.current);
-      }
+      cleanupPlayer();
     };
-  }, [url, autoplay]);
+  }, []);
 
-  /**
-   * プレーヤーの準備完了時の処理
-   * @param event YouTubeプレーヤーイベント
-   */
-  const onPlayerReady = (event: any) => {
+  // URLからビデオIDを抽出
+  useEffect(() => {
+    if (!url) {
+      setVideoId(null);
+      return;
+    }
+
+    // URLからビデオIDを抽出
+    let newVideoId: string | null = null;
+    if (url.includes('v=')) {
+      newVideoId = url.split('v=')[1].split('&')[0];
+    } else if (url.includes('youtu.be/')) {
+      newVideoId = url.split('youtu.be/')[1].split('?')[0];
+    } else if (url.includes('/embed/')) {
+      newVideoId = url.split('/embed/')[1].split('?')[0];
+    }
+
+    setVideoId(newVideoId);
+    urlRef.current = url;
+    setIsLoading(true);
+  }, [url]);
+
+  // プレーヤーの初期化と更新
+  useEffect(() => {
+    // プレーヤーAPIが準備できていない、またはビデオIDがない場合は何もしない
+    if (!playerReady || !videoId) {
+      return;
+    }
+
+    // 既存のプレーヤーをクリーンアップ
+    cleanupPlayer();
+
+    // 少し遅延させてから初期化（DOMの更新を待つ）
+    const initializationTimeout = setTimeout(() => {
+      try {
+        // プレーヤーを初期化
+        playerRef.current = new window.YT.Player(playerId, {
+          videoId: videoId,
+          playerVars: {
+            autoplay: autoplay ? 1 : 0,
+            rel: 0,
+            modestbranding: 1,
+          },
+          events: {
+            onReady: handlePlayerReady,
+            onStateChange: handlePlayerStateChange,
+            onError: handlePlayerError,
+          },
+        });
+      } catch (error) {
+        console.error('YouTube Player initialization error:', error);
+        setIsLoading(false);
+      }
+    }, 500);
+
+    return () => {
+      clearTimeout(initializationTimeout);
+    };
+  }, [playerReady, videoId, autoplay, playerId]);
+
+  // プレーヤーのクリーンアップ関数
+  const cleanupPlayer = () => {
+    // インターバルをクリア
+    if (timeUpdateIntervalRef.current) {
+      clearInterval(timeUpdateIntervalRef.current);
+      timeUpdateIntervalRef.current = null;
+    }
+
+    // プレーヤーを破棄
+    if (playerRef.current) {
+      try {
+        playerRef.current.destroy();
+      } catch (error) {
+        console.error('Error destroying YouTube player:', error);
+      }
+      playerRef.current = null;
+    }
+  };
+
+  // プレーヤーの準備完了時の処理
+  const handlePlayerReady = (event: any) => {
+    setIsLoading(false);
+
     // URLからスタート時間を抽出して、その時間からスタート
     const startTime = extractStartTime(urlRef.current);
     if (startTime) {
@@ -191,33 +189,42 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
 
     timeUpdateIntervalRef.current = window.setInterval(() => {
       if (playerRef.current && typeof playerRef.current.getCurrentTime === 'function') {
-        const time = playerRef.current.getCurrentTime();
-        // 前回の時間と異なる場合のみ更新
-        if (Math.abs(time - lastTimeRef.current) > 0.1) {
-          setCurrentTime(time);
-          lastTimeRef.current = time;
-          if (onTimeUpdate) {
-            onTimeUpdate(time);
+        try {
+          const time = playerRef.current.getCurrentTime();
+          // 前回の時間と異なる場合のみ更新
+          if (Math.abs(time - lastTimeRef.current) > 0.1) {
+            lastTimeRef.current = time;
+            if (onTimeUpdate) {
+              onTimeUpdate(time);
+            }
           }
+        } catch (error) {
+          console.error('Error getting current time:', error);
         }
       }
     }, 500); // 500ミリ秒ごとに更新
   };
 
-  /**
-   * 再生状態が変化したときの処理
-   * @param event YouTubeプレーヤーイベント
-   */
-  const onPlayerStateChange = (event: any) => {
+  // 再生状態が変化したときの処理
+  const handlePlayerStateChange = (event: any) => {
     // 再生中の場合は現在の再生時間を取得
     if (event.data === window.YT.PlayerState.PLAYING) {
-      const time = event.target.getCurrentTime();
-      setCurrentTime(time);
-      lastTimeRef.current = time;
-      if (onTimeUpdate) {
-        onTimeUpdate(time);
+      try {
+        const time = event.target.getCurrentTime();
+        lastTimeRef.current = time;
+        if (onTimeUpdate) {
+          onTimeUpdate(time);
+        }
+      } catch (error) {
+        console.error('Error in player state change:', error);
       }
     }
+  };
+
+  // プレーヤーエラー時の処理
+  const handlePlayerError = (event: any) => {
+    console.error('YouTube Player Error:', event.data);
+    setIsLoading(false);
   };
 
   // プレイヤーコンテナのスタイルを動的に生成
@@ -227,11 +234,8 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
 
   return (
     <div className="youtube-player-container border border-border dark:border-gray-800 bg-black aspect-ratio-16/9 w-full h-full" style={containerStyle}>
-      {embedUrl ? (
-        <div id="youtube-player" className="w-full h-full" key={embedUrl}></div>
-      ) : (
-        <LoadingIndicator />
-      )}
+      {isLoading && <LoadingIndicator />}
+      <div id={playerId} className="w-full h-full" key={`player-${videoId}`}></div>
     </div>
   );
 };
@@ -241,7 +245,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
  */
 const LoadingIndicator: React.FC = () => {
   return (
-    <div className="flex items-center justify-center h-full w-full">
+    <div className="flex items-center justify-center h-full w-full absolute top-0 left-0 z-10 bg-black/70">
       <div className="text-primary animate-pulse flex items-center">
         <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>

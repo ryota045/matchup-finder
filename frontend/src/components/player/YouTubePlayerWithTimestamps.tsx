@@ -43,6 +43,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
     currentTime,
     currentVideo,
     selectedVideoUrl,
+    isChangingVideo,
     setCurrentUrl,
     setCurrentTime,
     setCurrentVideo,
@@ -138,7 +139,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   }, [currentUrl, currentVideo, videos, allVideos, setCurrentVideo]);
 
   // 動画が選択されているかどうか
-  const isVideoSelected = !!currentUrl && !!currentVideo;
+  const isVideoSelected = !!currentUrl && !!currentVideo && !isChangingVideo;
   
   // グループ化された動画
   const groupedVideosByDirectory = groupVideosByDirectory(videos);
@@ -164,6 +165,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
               isSelectedCharacter={isSelectedCharacter}
               isSelectedOpponentCharacters={isSelectedOpponentCharacters}
               onTimeUpdate={handleTimeUpdate}
+              isChangingVideo={isChangingVideo}
             />
           </div>
           
