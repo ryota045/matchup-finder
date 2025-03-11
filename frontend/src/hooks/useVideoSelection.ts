@@ -7,9 +7,14 @@ import { extractTimestampFromUrl, extractVideoId } from '@/utils/YouTubeUtils';
  * 
  * @param videos 表示する動画リスト
  * @param allVideos 全ての動画リスト（検索結果で絞られる前）
+ * @param playerContainerRef プレーヤーコンテナへの参照（オプション）
  * @returns 動画選択に関連する状態と関数
  */
-const useVideoSelection = (videos: MatchupVideo[], allVideos: MatchupVideo[]) => {
+const useVideoSelection = (
+  videos: MatchupVideo[], 
+  allVideos: MatchupVideo[],
+  playerContainerRef?: React.RefObject<HTMLDivElement | null>
+) => {
   const [currentUrl, setCurrentUrl] = useState('');
   const [currentTime, setCurrentTime] = useState(0);
   const [currentVideo, setCurrentVideo] = useState<MatchupVideo | null>(null);
@@ -115,6 +120,14 @@ const useVideoSelection = (videos: MatchupVideo[], allVideos: MatchupVideo[]) =>
       
       // タイムスタンプを設定
       setCurrentTime(timestamp || 0);
+      
+      // 画面の一番下までスクロール
+      setTimeout(() => {
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 300);
       
       // 動画変更中フラグをリセット（少し遅延させる）
       resetChangingFlagTimeoutRef.current = setTimeout(() => {
