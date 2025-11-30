@@ -28,7 +28,6 @@ const SingleCharacterIcon: React.FC<SingleCharacterIconProps> = ({
           src={icon.path}
           alt={`${icon.eng} icon`}
           className="w-full h-full object-cover"
-          loading="lazy"
         />
       </div>
       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-opacity duration-200 rounded-lg" />

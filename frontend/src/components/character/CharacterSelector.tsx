@@ -9,6 +9,7 @@ import {
   filterCharacterIcons,
   characterIcons
 } from '../../data/characterData';
+import { usePreloadCharacterImages } from '../../hooks/usePreloadCharacterImages';
 
 // キャラクターの表示用コンポーネント
 interface CharacterDisplayProps {
@@ -266,6 +267,9 @@ const CharacterSelector: React.FC<CharacterSelectorProps> = ({
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectionMode, setSelectionMode] = useState<'single' | 'multiple'>('single');
   const [searchTerm, setSearchTerm] = useState('');
+
+  // ページ初期表示時にアイドル状態でキャラクター画像を事前読み込み
+  usePreloadCharacterImages();
 
   // モーダルが閉じたら検索欄をクリア
   useEffect(() => {

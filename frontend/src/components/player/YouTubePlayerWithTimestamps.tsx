@@ -37,20 +37,6 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   selectedCharacter,
   selectedOpponentCharacters = [],
 }) => {
-  // プレーヤーの状態管理
-  const {
-    currentUrl,
-    currentTime,
-    currentVideo,
-    selectedVideoUrl,
-    setCurrentUrl,
-    setCurrentTime,
-    setCurrentVideo,
-    setSelectedVideoUrl,
-    handleTimestampClick,
-    handleVideoSelect
-  } = useVideoSelection(videos, allVideos);
-
   // レイアウト状態管理
   const {
     isPlaylistOpen,
@@ -70,6 +56,21 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
     toggleDirectoryAccordion,
     toggleAccordion
   } = usePlayerLayout();
+  
+  // プレーヤーの状態管理
+  const {
+    currentUrl,
+    currentTime,
+    currentVideo,
+    selectedVideoUrl,
+    isChangingVideo,
+    setCurrentUrl,
+    setCurrentTime,
+    setCurrentVideo,
+    setSelectedVideoUrl,
+    handleTimestampClick,
+    handleVideoSelect
+  } = useVideoSelection(videos, allVideos, playerContainerRef);
   
   // 使用キャラクターと対戦キャラクターの両方が選択されているかチェック
   const hasRequiredCharacters = !!selectedCharacter && selectedOpponentCharacters.length > 0;
@@ -99,6 +100,20 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
       }
     }
   }, [selectedCharacter, selectedOpponentCharacters, hasRequiredCharacters, setIsPlaylistOpen, setIsTimestampOpen, setActiveTab]);
+
+  // 使用キャラクターと対戦キャラクターが選択された場合、画面の一番下までスクロール
+  useEffect(() => {
+    if (hasRequiredCharacters) {
+      // スクロール処理を少し遅延させて、UIの更新が完了してから実行
+      setTimeout(() => {
+        // 画面の一番下までスクロール
+        window.scrollTo({
+          top: document.body.scrollHeight,
+          behavior: 'smooth'
+        });
+      }, 300);
+    }
+  }, [hasRequiredCharacters, selectedCharacter, selectedOpponentCharacters]);
 
   // URLが変更されたときに対応する動画情報を更新
   useEffect(() => {
@@ -138,7 +153,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   }, [currentUrl, currentVideo, videos, allVideos, setCurrentVideo]);
 
   // 動画が選択されているかどうか
-  const isVideoSelected = !!currentUrl && !!currentVideo;
+  const isVideoSelected = !!currentUrl && !!currentVideo && !isChangingVideo;
   
   // グループ化された動画
   const groupedVideosByDirectory = groupVideosByDirectory(videos);
@@ -164,6 +179,7 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
               isSelectedCharacter={isSelectedCharacter}
               isSelectedOpponentCharacters={isSelectedOpponentCharacters}
               onTimeUpdate={handleTimeUpdate}
+              isChangingVideo={isChangingVideo}
             />
           </div>
           

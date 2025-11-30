@@ -11,6 +11,7 @@ import useOrientation from '@/hooks/useOrientation';
  * @property {boolean} isSelectedCharacter - キャラクターが選択されているかどうか
  * @property {boolean} isSelectedOpponentCharacters - 対戦キャラクターが選択されているかどうか
  * @property {(time: number) => void} [onTimeUpdate] - 再生時間が更新されたときのコールバック関数
+ * @property {boolean} [isChangingVideo] - 動画切り替え中かどうか
  */
 interface PlayerContentProps {
   isVideoSelected: boolean;
@@ -19,6 +20,7 @@ interface PlayerContentProps {
   isSelectedCharacter: boolean;
   isSelectedOpponentCharacters: boolean;
   onTimeUpdate?: (time: number) => void;
+  isChangingVideo?: boolean;
 }
 
 /**
@@ -34,7 +36,8 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
   playerContainerRef,
   isSelectedCharacter,
   isSelectedOpponentCharacters,
-  onTimeUpdate
+  onTimeUpdate,
+  isChangingVideo = false
 }) => {
   // 画面の向きと寸法を管理するカスタムフック
   const { isLandscape, shortestDimension } = useOrientation();
@@ -55,7 +58,15 @@ const PlayerContent: React.FC<PlayerContentProps> = ({
                     xs:max-h-[80vh] xs:min-h-[480px] w-full flex items-center justify-center" 
           style={playerContainerStyle}
         >
-          {isVideoSelected ? (
+          {isChangingVideo ? (
+            <div className="text-center p-8">
+              <div className="text-4xl mb-4">🔄</div>
+              <h3 className="text-xl font-semibold mb-2">動画を切り替え中...</h3>
+              <div className="flex justify-center mt-4">
+                <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full"></div>
+              </div>
+            </div>
+          ) : isVideoSelected ? (
             <div className="h-full w-full">
               <YouTubePlayer 
                 url={currentUrl} 
