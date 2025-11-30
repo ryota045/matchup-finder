@@ -45,21 +45,9 @@ const useVideoSelection = (
    */
   const handleTimestampClick = useCallback((time: number) => {
     try {
-      // 既に動画変更中の場合は処理をスキップ
-      if (isChangingVideo) return;
-      
-      // 前回のタイムアウトがあればクリア
-      if (resetChangingFlagTimeoutRef.current) {
-        clearTimeout(resetChangingFlagTimeoutRef.current);
-        resetChangingFlagTimeoutRef.current = null;
-      }
-      
       // 現在のURLからビデオIDを抽出
       const videoId = extractVideoId(currentUrl);
       if (!videoId) return;
-      
-      // 動画変更中フラグをセット（タイムスタンプ変更時も同様に）
-      setIsChangingVideo(true);
       
       // 新しいURLを生成（タイムスタンプ付き）
       const newUrl = `https://www.youtube.com/watch?v=${videoId}&t=${Math.floor(time)}`;
@@ -67,18 +55,12 @@ const useVideoSelection = (
       // 現在の再生時間を即座に更新
       setCurrentTime(time);
       
-      // URLを更新
+      // URLを更新（同じ動画内でのタイムスタンプ変更なので、isChangingVideoフラグは立てない）
       setCurrentUrl(newUrl);
-      
-      // 動画変更中フラグをリセット（少し遅延させる）
-      resetChangingFlagTimeoutRef.current = setTimeout(() => {
-        setIsChangingVideo(false);
-      }, 500);
     } catch (error) {
       console.error('Error in handleTimestampClick:', error);
-      setIsChangingVideo(false);
     }
-  }, [currentUrl, isChangingVideo]);
+  }, [currentUrl]);
 
   /**
    * 動画が選択されたときの処理
@@ -89,18 +71,27 @@ const useVideoSelection = (
     if (!url || isChangingVideo) return;
     
     try {
-      // 前回のタイムアウトがあればクリア
-      if (changeVideoTimeoutRef.current) {
-        clearTimeout(changeVideoTimeoutRef.current);
-        changeVideoTimeoutRef.current = null;
-      }
-      if (resetChangingFlagTimeoutRef.current) {
-        clearTimeout(resetChangingFlagTimeoutRef.current);
-        resetChangingFlagTimeoutRef.current = null;
-      }
+      // 現在のURLと新しいURLのビデオIDを比較
+      const currentVideoId = extractVideoId(currentUrl);
+      const newVideoId = extractVideoId(url);
       
-      // 動画変更中フラグをセット
-      setIsChangingVideo(true);
+      // 別の動画に切り替わる場合のみ、動画変更中フラグをセット
+      const isDifferentVideo = currentVideoId !== newVideoId;
+      
+      if (isDifferentVideo) {
+        // 前回のタイムアウトがあればクリア
+        if (changeVideoTimeoutRef.current) {
+          clearTimeout(changeVideoTimeoutRef.current);
+          changeVideoTimeoutRef.current = null;
+        }
+        if (resetChangingFlagTimeoutRef.current) {
+          clearTimeout(resetChangingFlagTimeoutRef.current);
+          resetChangingFlagTimeoutRef.current = null;
+        }
+        
+        // 動画変更中フラグをセット
+        setIsChangingVideo(true);
+      }
       
       // URLに一致する動画を検索
       const foundVideo = [...videos, ...allVideos].find(video => video.url === url);
@@ -129,15 +120,17 @@ const useVideoSelection = (
         });
       }, 300);
       
-      // 動画変更中フラグをリセット（少し遅延させる）
-      resetChangingFlagTimeoutRef.current = setTimeout(() => {
-        setIsChangingVideo(false);
-      }, 1000);
+      // 別の動画に切り替わった場合のみ、動画変更中フラグをリセット
+      if (isDifferentVideo) {
+        resetChangingFlagTimeoutRef.current = setTimeout(() => {
+          setIsChangingVideo(false);
+        }, 1000);
+      }
     } catch (error) {
       console.error('Error in handleVideoSelect:', error);
       setIsChangingVideo(false);
     }
-  }, [videos, allVideos, isChangingVideo]);
+  }, [videos, allVideos, isChangingVideo, currentUrl]);
 
   return {
     currentUrl,
