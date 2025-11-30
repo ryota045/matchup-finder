@@ -22,7 +22,14 @@ export default {
     },
     container: {
       center: true,
-      padding: 'xs:1rem', // 必要に応じてパディングを設定
+      padding: {
+        DEFAULT: '1rem',
+        xs: '1rem',
+        sm: '1.5rem',
+        md: '2rem',
+        lg: '2rem',
+        xl: '2rem',
+      },
       screens: {       
         sm: '1200px',        
         xl: '1280px',

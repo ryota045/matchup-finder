@@ -132,9 +132,12 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
 
       // 有効なビデオIDが抽出できた場合のみ設定
       if (newVideoId && newVideoId.length > 0) {
-        setVideoId(newVideoId);
+        // 同じビデオIDの場合は、setVideoIdを呼ばない（再初期化を防ぐ）
+        if (newVideoId !== videoId) {
+          setVideoId(newVideoId);
+          setIsLoading(true);
+        }
         urlRef.current = url;
-        setIsLoading(true);
       } else {
         console.error('Invalid YouTube URL or could not extract video ID:', url);
         setVideoId(null);
@@ -145,7 +148,25 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
       setVideoId(null);
       setIsLoading(false);
     }
-  }, [url]);
+  }, [url, videoId]);
+  
+  // URL変更時のタイムスタンプシーク処理（同じビデオID内での移動）
+  useEffect(() => {
+    if (!url || !playerRef.current || !videoId) return;
+    
+    const currentVideoId = playerRef.current.getVideoData?.()?.video_id;
+    if (currentVideoId !== videoId) return; // 別の動画の場合はスキップ
+    
+    try {
+      const startTime = extractStartTime(url);
+      if (startTime !== null && startTime !== undefined) {
+        // 同じ動画内でのシーク
+        playerRef.current.seekTo(startTime, true);
+      }
+    } catch (error) {
+      console.error('Error seeking to timestamp:', error);
+    }
+  }, [url, videoId]);
 
   // プレーヤーの初期化と更新
   useEffect(() => {
@@ -180,8 +201,9 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
             // 同じビデオIDの場合は、シークのみ行う
             const currentVideoId = playerRef.current.getVideoData?.()?.video_id;
             if (currentVideoId === videoId) {
-              playerRef.current.seekTo(startTime);
-              setIsLoading(false);
+              // シークのみ行い、読み込み状態は変更しない
+              playerRef.current.seekTo(startTime, true); // allowSeekAhead を true に設定
+              // isLoading状態は変更しない（シームレスな遷移のため）
               return;
             }
             
@@ -232,7 +254,7 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
     return () => {
       cleanupPlayer();
     };
-  }, [videoId, autoplay, url]);
+  }, [videoId, autoplay]);
 
   // プレーヤーのクリーンアップ関数
   const cleanupPlayer = () => {
@@ -320,11 +342,11 @@ const YouTubePlayer: React.FC<YouTubePlayerProps> = ({
   return (
     <div 
       ref={containerRef}
-      className="youtube-player-container border border-border dark:border-gray-800 bg-black aspect-ratio-16/9 w-full h-full" 
+      className="youtube-player-container border border-border dark:border-gray-800 bg-black aspect-ratio-16\/9 w-full h-full" 
       style={containerStyle}
     >
       {isLoading && <LoadingIndicator />}
-      <div id={playerElementId.current} className="w-full h-full" key={`player-container-${playerElementId.current}`}></div>
+      <div id={playerElementId.current} className="w-full h-full"></div>
     </div>
   );
 };
