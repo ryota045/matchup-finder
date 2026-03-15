@@ -4,7 +4,7 @@ import { MatchupVideo } from '../playlist/VideoItem';
 import PlayerControls from './PlayerControls';
 import PlayerContent from './PlayerContent';
 import SidebarContent from './SidebarContent';
-import { getCharacterGroupedVideos, groupVideosByDirectory } from '@/utils/videoUtils';
+import { groupVideosByCharacter } from '@/utils/videoUtils';
 import useVideoSelection from '@/hooks/useVideoSelection';
 import usePlayerLayout from '@/hooks/usePlayerLayout';
 
@@ -43,18 +43,16 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
     isTimestampOpen,
     activeTab,
     playerContainerRef,
-    expandedGroups,
+    expandedCharacters,
     expandedDirectories,
     setIsPlaylistOpen,
     setIsTimestampOpen,
     setActiveTab,
-    setExpandedGroups,
-    setExpandedDirectories,
     handlePlaylistToggle,
     handleTimestampToggle,
     handleTabChange,
+    toggleCharacterAccordion,
     toggleDirectoryAccordion,
-    toggleAccordion
   } = usePlayerLayout();
   
   // プレーヤーの状態管理
@@ -155,8 +153,11 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
   // 動画が選択されているかどうか
   const isVideoSelected = !!currentUrl && !!currentVideo && !isChangingVideo;
   
-  // グループ化された動画
-  const groupedVideosByDirectory = groupVideosByDirectory(videos);
+  // キャラクター優先でグループ化された動画（キャラクター → チャンネル → 動画）
+  const characterGroupedVideos = useMemo(
+    () => groupVideosByCharacter(sortedVideos, selectedCharacter),
+    [sortedVideos, selectedCharacter]
+  );
 
   return (
     <div className="youtube-player-with-timestamps flex flex-col md:flex-row gap-4 w-full">
@@ -200,12 +201,11 @@ const YouTubePlayerWithTimestamps: React.FC<YouTubePlayerWithTimestampsProps> = 
               videos={sortedVideos}
               allVideos={allVideos}
               selectedCharacter={selectedCharacter}
+              expandedCharacters={expandedCharacters}
               expandedDirectories={expandedDirectories}
-              expandedGroups={expandedGroups}
+              toggleCharacterAccordion={toggleCharacterAccordion}
               toggleDirectoryAccordion={toggleDirectoryAccordion}
-              toggleAccordion={toggleAccordion}
-              groupedVideos={groupedVideosByDirectory}
-              getCharacterGroupedVideos={(videos) => getCharacterGroupedVideos(videos, selectedCharacter)}
+              characterGroupedVideos={characterGroupedVideos}
               selectedVideoUrl={selectedVideoUrl}
             />
           </div>

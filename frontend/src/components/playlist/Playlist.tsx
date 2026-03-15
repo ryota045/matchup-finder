@@ -1,5 +1,5 @@
 import React, { RefObject } from 'react';
-import DirectoryGroup from './DirectoryGroup';
+import CharacterTopGroup from './CharacterTopGroup';
 import { MatchupVideo } from './VideoItem';
 import { CharacterIcon } from './CharacterIconPair';
 import AnimatedAccordion from '../ui/AnimatedAccordion';
@@ -8,15 +8,13 @@ import AnimatedAccordion from '../ui/AnimatedAccordion';
  * プレイリストコンポーネントのプロパティ
  * @interface PlaylistProps
  * @property {MatchupVideo[]} videos - 全ての動画リスト
- * @property {Object} groupedVideos - ディレクトリごとにグループ化された動画
- * @property {Object} expandedDirectories - 展開されているディレクトリの状態
- * @property {Object} expandedGroups - 展開されているキャラクターグループの状態
+ * @property {Object} characterGroupedVideos - キャラクターの組み合わせごとにグループ化された動画（チャンネル情報を含む）
+ * @property {Object} expandedCharacters - 展開されているキャラクターグループの状態（キー: charKey）
+ * @property {Object} expandedDirectories - 展開されているチャンネルの状態（キー: charKey-directory）
  * @property {boolean} isOpen - プレイリストが開いているかどうか
- * @property {(directory: string) => void} toggleDirectoryAccordion - ディレクトリアコーディオンの開閉を切り替える関数
- * @property {(directory: string, charKey: string) => void} toggleAccordion - キャラクターグループアコーディオンの開閉を切り替える関数
- * @property {number} selectedVideoIndex - 選択されている動画のインデックス
- * @property {(index: number) => void} onVideoSelect - 動画が選択されたときのコールバック関数
- * @property {(videos: MatchupVideo[]) => Object} getCharacterGroupedVideos - 動画をキャラクターごとにグループ化する関数
+ * @property {(charKey: string) => void} toggleCharacterAccordion - キャラクターグループアコーディオンの開閉を切り替える関数
+ * @property {(charKey: string, directory: string) => void} toggleDirectoryAccordion - チャンネルアコーディオンの開閉を切り替える関数
+ * @property {(url: string) => void} onVideoSelect - 動画が選択されたときのコールバック関数
  * @property {(isOpen: boolean) => void} setIsOpen - プレイリストの開閉状態を設定する関数
  * @property {RefObject<HTMLDivElement | null>} [playerContainerRef] - プレーヤーコンテナへの参照
  * @property {string} [className] - 追加のCSSクラス名
@@ -24,14 +22,21 @@ import AnimatedAccordion from '../ui/AnimatedAccordion';
  */
 interface PlaylistProps {
   videos: MatchupVideo[];
-  groupedVideos: {[key: string]: MatchupVideo[]};
-  expandedDirectories: {[key: string]: boolean};
-  expandedGroups: {[key: string]: boolean};
+  characterGroupedVideos: {
+    [charKey: string]: {
+      icon1: CharacterIcon | null;
+      icon2: CharacterIcon | null;
+      useChara?: string;
+      directories: { [directory: string]: MatchupVideo[] };
+      videos: MatchupVideo[];
+    };
+  };
+  expandedCharacters: { [key: string]: boolean };
+  expandedDirectories: { [key: string]: boolean };
   isOpen: boolean;
-  toggleDirectoryAccordion: (directory: string) => void;
-  toggleAccordion: (directory: string, charKey: string) => void;
+  toggleCharacterAccordion: (charKey: string) => void;
+  toggleDirectoryAccordion: (charKey: string, directory: string) => void;
   onVideoSelect: (url: string) => void;
-  getCharacterGroupedVideos: (videos: MatchupVideo[]) => {[key: string]: {icon1: CharacterIcon | null, icon2: CharacterIcon | null, videos: MatchupVideo[]}};
   setIsOpen: (isOpen: boolean) => void;
   playerContainerRef?: RefObject<HTMLDivElement | null>;
   className?: string;
@@ -40,69 +45,57 @@ interface PlaylistProps {
 
 /**
  * 動画のプレイリストを表示するコンポーネント
- * 
+ * キャラクター → チャンネル → 動画 の階層で表示します
+ *
  * @component
- * @example
- * ```tsx
- * <Playlist
- *   videos={allVideos}
- *   groupedVideos={groupedVideos}
- *   expandedDirectories={expandedDirectories}
- *   expandedGroups={expandedGroups}
- *   isOpen={isOpen}
- *   toggleDirectoryAccordion={toggleDirectoryAccordion}
- *   toggleAccordion={toggleAccordion}
- *   selectedVideoIndex={0}
- *   onVideoSelect={handleVideoSelect}
- *   getCharacterGroupedVideos={getCharacterGroupedVideos}
- *   setIsOpen={setIsOpen}
- * />
- * ```
  */
 const Playlist: React.FC<PlaylistProps> = ({
   videos,
-  groupedVideos,
+  characterGroupedVideos,
+  expandedCharacters,
   expandedDirectories,
-  expandedGroups,
   isOpen,
+  toggleCharacterAccordion,
   toggleDirectoryAccordion,
-  toggleAccordion,
   onVideoSelect,
-  getCharacterGroupedVideos,
   setIsOpen,
   playerContainerRef,
-  className = "",
-  selectedVideoUrl
+  className = '',
+  selectedVideoUrl,
 }) => {
-  // 事前にコンテンツをレンダリングしておく
-  const renderDirectoryGroups = () => {
-    return Object.keys(groupedVideos).length > 0 ? (
+  const renderCharacterGroups = () => {
+    const entries = Object.entries(characterGroupedVideos);
+    if (entries.length === 0) {
+      return (
+        <div className="p-4 text-center text-muted-foreground">
+          プレイリストが空です
+        </div>
+      );
+    }
+
+    return (
       <div className="divide-y divide-border dark:divide-gray-800">
-        {Object.keys(groupedVideos).sort((a, b) => groupedVideos[b].length - groupedVideos[a].length) // ビデオ数で降順ソート
-        .map(directory => (
-          <DirectoryGroup
-            key={directory}
-            directory={directory}
-            videos={groupedVideos[directory]}
-            isExpanded={expandedDirectories[directory]}
-            toggleDirectoryAccordion={() => toggleDirectoryAccordion(directory)}
-            expandedGroups={expandedGroups}
-            toggleAccordion={toggleAccordion}
-            onVideoSelect={onVideoSelect}
-            getCharacterGroupedVideos={getCharacterGroupedVideos}
-            selectedVideoUrl={selectedVideoUrl}
-          />
-        ))}
-      </div>
-    ) : (
-      <div className="p-4 text-center text-muted-foreground">
-        プレイリストが空です
+        {entries
+          .sort(([, a], [, b]) => b.videos.length - a.videos.length)
+          .map(([charKey, group]) => (
+            <CharacterTopGroup
+              key={charKey}
+              charKey={charKey}
+              group={group}
+              isExpanded={expandedCharacters[charKey] || false}
+              toggleCharacterAccordion={toggleCharacterAccordion}
+              expandedDirectories={expandedDirectories}
+              toggleDirectoryAccordion={toggleDirectoryAccordion}
+              onVideoSelect={onVideoSelect}
+              selectedVideoUrl={selectedVideoUrl}
+            />
+          ))}
       </div>
     );
   };
 
   if (videos.length === 0) return null;
-  
+
   return (
     <AnimatedAccordion
       title={`検索結果 (${videos.length})`}
@@ -112,9 +105,9 @@ const Playlist: React.FC<PlaylistProps> = ({
       className={className}
       disableAnimationOnMobile={true}
     >
-      {renderDirectoryGroups()}
+      {renderCharacterGroups()}
     </AnimatedAccordion>
   );
 };
 
-export default Playlist; 
+export default Playlist;
