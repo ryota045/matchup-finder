@@ -66,6 +66,58 @@ export const removeTimestampFromUrl = (url: string): string => {
 };
 
 /**
+ * 動画をキャラクターの組み合わせ優先でグループ化する関数
+ * キャラクター → チャンネル(ディレクトリ) の階層でグループ化します
+ * @param videos 動画リスト
+ * @param selectedCharacter 選択されたキャラクター名（英語）
+ * @returns キャラクターの組み合わせごとにグループ化され、その中にディレクトリ別の動画を持つ構造
+ */
+export const groupVideosByCharacter = (
+  videos: PlaylistMatchupVideo[],
+  selectedCharacter?: string
+): {
+  [charKey: string]: {
+    icon1: PlaylistCharacterIcon | null;
+    icon2: PlaylistCharacterIcon | null;
+    useChara?: string;
+    directories: { [directory: string]: PlaylistMatchupVideo[] };
+    videos: PlaylistMatchupVideo[];
+  };
+} => {
+  const charGroups = getCharacterGroupedVideos(videos, selectedCharacter);
+
+  const result: {
+    [charKey: string]: {
+      icon1: PlaylistCharacterIcon | null;
+      icon2: PlaylistCharacterIcon | null;
+      useChara?: string;
+      directories: { [directory: string]: PlaylistMatchupVideo[] };
+      videos: PlaylistMatchupVideo[];
+    };
+  } = {};
+
+  Object.entries(charGroups).forEach(([charKey, group]) => {
+    const directories: { [directory: string]: PlaylistMatchupVideo[] } = {};
+    group.videos.forEach(video => {
+      if (!directories[video.directory]) {
+        directories[video.directory] = [];
+      }
+      directories[video.directory].push(video);
+    });
+
+    result[charKey] = {
+      icon1: group.icon1,
+      icon2: group.icon2,
+      useChara: group.useChara,
+      directories,
+      videos: group.videos,
+    };
+  });
+
+  return result;
+};
+
+/**
  * 動画をディレクトリごとにグループ化する関数
  * @param videos 動画リスト
  * @returns ディレクトリごとにグループ化された動画
